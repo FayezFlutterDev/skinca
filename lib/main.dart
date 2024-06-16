@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/constants/routes.dart';
-import 'package:skinca/example.dart';
 import 'package:skinca/views/home/theme_cubit.dart';
 
 void main() {
@@ -30,8 +29,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeState>(
@@ -39,9 +36,8 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'SkinCa',
-          // routes: routes,
-          // initialRoute: "/",
-          home: Examp(),
+          routes: routes,
+          initialRoute: "/",
           themeMode: state.themeMode,
           theme: ThemeData(
             colorSchemeSeed: state.colorSelected.color,

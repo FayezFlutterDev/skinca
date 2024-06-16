@@ -32,7 +32,7 @@ class _EntryPointUIState extends State<EntryPointUI> {
     const SearchPage(),
     ChatPage(),
     const NotificationPage(),
-   ProfilePage(),
+   const ProfilePage(),
   ];
 
   @override

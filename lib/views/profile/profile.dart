@@ -1,147 +1,233 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:skinca/core/constants/app_defaults.dart';
-import 'package:skinca/core/constants/icon_borken.dart';
+
 class ProfilePage extends StatefulWidget {
   static const String routeName = '/profile';
- const ProfilePage({super.key});
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-   List<Map<String, dynamic>> items = [
-    {'text': 'Language', 'icon': Icons.language, 'onTap': () => print('Language tapped')},
-    {'text': 'Change Password', 'icon': Icons.lock, 'onTap': () => print('Change Password tapped')},
+  List<Map<String, dynamic>> items = [
+    {
+      'text': 'Language',
+      'icon': Icons.language,
+      'onTap': () => print('Language tapped')
+    },
+    {
+      'text': 'Change Password',
+      'icon': Icons.lock,
+      'onTap': () => print('Change Password tapped')
+    },
     {'text': 'Help', 'icon': Icons.help, 'onTap': () => print('Help tapped')},
-    {'text': 'Contact Us', 'icon': Icons.contact_phone, 'onTap': () => print('Contact Us tapped')},
+    {
+      'text': 'Contact Us',
+      'icon': Icons.contact_phone,
+      'onTap': () => print('Contact Us tapped')
+    },
   ];
 
   bool isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context)
+        .textTheme
+        .apply(displayColor: Theme.of(context).colorScheme.onSurface);
     return Scaffold(
-      backgroundColor: Colors.teal,
+      backgroundColor: const Color(0xFF009788),
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: double.infinity,
-              height: SizeConfig.screenHeight * 0.3,
-              padding: const EdgeInsets.only(top: 40, bottom: 20),
-              color: Colors.teal,
-              child: const Column(
-                children: [
-                  SizedBox(height: 20),
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: AssetImage(
-                        "assets/images/user.jpg"), // Replace with the user's image URL
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Abdullah Fayez',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: isExpanded ? 60 : 200,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              decoration: const BoxDecoration(
+                color: Color(0xFF009788),
               ),
+              child: !isExpanded
+                  ? FittedBox(
+                      child: Column(
+                        children: [
+                          Stack(children: [
+                            const CircleAvatar(
+                              radius: 45,
+                              backgroundColor: Colors.red,
+                            ),
+                            Positioned(
+                                bottom: 10,
+                                right: 2,
+                                child: CircleAvatar(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.surface,
+                                  radius: 10,
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    size: 15,
+                                  ),
+                                ))
+                          ]),
+                          SizedBox(height: getProportionateScreenHeight(5)),
+                          Text(
+                            'Your Name',
+                            style: textTheme.bodyLarge!
+                                .copyWith(fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                            child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 45,
+                              backgroundColor: Colors.red,
+                            ),
+                            Text(
+                              'Your Name',
+                              style: textTheme.bodyLarge!
+                                  .copyWith(fontWeight: FontWeight.bold),
+                            )
+                          ],
+                        )),
+                      ],
+                    ),
             ),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(50),
-                    topRight: Radius.circular(50),
-                  ),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(50),
+                        topRight: Radius.circular(50))),
+                padding: const EdgeInsets.only(
+                  top: 20,
                 ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(vertical: 30),
-                    children: [
-                      ProfileItem(
-                        icon: IconBroken.Edit,
-                        text: "Edit Information",
-                        onTap: () {},
-                      ),
-                      const Divider(),
-                      ProfileItem(
-                        icon: IconBroken.Calendar,
-                        text: "My Medical Record",
-                        onTap: () {},
-                      ),
-                      const Divider(),
-                      Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                onExpansionChanged: (v) {
-                  setState(() {
-                    isExpanded = v;
-                  });
-                },
-                title: Text(
-                  'الإعدادات',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  softWrap: true,
-                  textAlign: TextAlign.center,
-                ),
-                childrenPadding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                leading: Icon(Icons.settings,color:isExpanded? Colors.lightBlueAccent:null,),
-                trailing: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 600),
-                  child: isExpanded ? Icon(Icons.keyboard_arrow_down,color: Colors.lightBlueAccent,) : Icon(Icons.keyboard_arrow_left,color: Colors.grey,),
-                ),
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => null,
-                    child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 15),
-                      child: Column(
-                        children: List.generate(items.length, (index) {
-                          return ListTile(
-                            leading: Icon(items[index]['icon'],color: Colors.lightBlueAccent,),
-                            title: Text(items[index]['text'],style: TextStyle(color: Colors.lightBlueAccent,),),
-                            onTap: items[index]['onTap'],
-                          );
-                        }),
-                      ),
+                child: Theme(
+                  data: Theme.of(context)
+                      .copyWith(dividerColor: Colors.transparent),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ExpansionTileItem(
+                          textTheme: textTheme,
+                          text: 'Profile Info',
+                          icon: Icons.person,
+                          nextPage: '/edit_information',
+                        ),
+                        ExpansionTileItem(
+                          textTheme: textTheme,
+                          text: 'Medical Record',
+                          icon: Icons.medical_services,
+                          nextPage: '/edit_information',
+                        ),
+                        ExpansionTileItem(
+                          textTheme: textTheme,
+                          text: 'Alarm Medication',
+                          icon: Icons.alarm,
+                          nextPage: '/edit_information',
+                        ),
+                        ExpansionTile(
+                          onExpansionChanged: (v) {
+                            setState(() {
+                              isExpanded = v;
+                            });
+                          },
+                          title: Text(
+                            'Settings',
+                            style: Theme.of(context).textTheme.titleMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.fade,
+                            softWrap: true,
+                            textAlign: TextAlign.center,
+                          ),
+                          childrenPadding: const EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 10),
+                          leading: Icon(
+                            Icons.settings,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          trailing: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 600),
+                            child: isExpanded
+                                ? Icon(
+                                    Icons.arrow_back_ios,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  )
+                                : Icon(
+                                    Icons.arrow_forward_ios,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                  ),
+                          ),
+                          children: [
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              //onTap: () => null,
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Column(
+                                  children:
+                                      List.generate(items.length, (index) {
+                                    return ListTile(
+                                      leading: Icon(
+                                        items[index]['icon'],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      title: Text(
+                                        items[index]['text'],
+                                        style: const TextStyle(),
+                                      ),
+                                      onTap: items[index]['onTap'],
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        ExpansionTileItem(
+                          textTheme: textTheme,
+                          text: 'Contact Us',
+                          icon: Icons.contact_phone,
+                          nextPage: '/edit_information',
+                        ),
+                        ExpansionTileItem(
+                          textTheme: textTheme,
+                          text: 'Doctors',
+                          icon: Icons.people,
+                          nextPage: '/edit_information',
+                        ),
+                        ExpansionTileItem(
+                          textTheme: textTheme,
+                          text: 'Bookmarks',
+                          icon: Icons.bookmark,
+                          nextPage: '/edit_information',
+                        ),
+                        ExpansionTileItem(
+                          textTheme: textTheme,
+                          text: 'Log Out',
+                          icon: Icons.logout,
+                          nextPage: '/edit_information',
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-                    
-                      const Divider(),
-                      ProfileItem(
-                        icon: IconBroken.Call,
-                        text: "Contact",
-                        onTap: () {},
-                      ),
-                      const Divider(),
-                      ProfileItem(
-                        icon: IconBroken.Logout,
-                        text: "Log out",
-                        isLogout: true,
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -149,33 +235,48 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// ignore: must_be_immutable
-class ProfileItem extends StatelessWidget {
-  ProfileItem({
+class ExpansionTileItem extends StatelessWidget {
+  const ExpansionTileItem({
     super.key,
+    required this.textTheme,
     required this.text,
     required this.icon,
-    required this.onTap,
-    this.isLogout = false,
+    required this.nextPage,
   });
+
+  final TextTheme textTheme;
   final String text;
   final IconData icon;
-  final VoidCallback onTap;
-  bool isLogout = false;
+  final String nextPage;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-          // foregroundColor: Theme.of(context).colorScheme.onSurface,
-          child: Icon(icon,
-              color: isLogout ? Colors.red : const Color(0xFF00A896))),
+    return ExpansionTile(
+      enabled: false,
       title: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        style: textTheme.titleMedium!,
+        maxLines: 1,
+        overflow: TextOverflow.fade,
+        softWrap: true,
+        textAlign: TextAlign.center,
       ),
-      trailing: const Icon(Icons.arrow_forward_ios),
-      onTap: onTap,
+      childrenPadding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+      leading: Icon(
+        icon,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      trailing: GestureDetector(
+        onTap: () {
+          Navigator.of(context).pushNamed(nextPage);
+        },
+        child: Icon(
+          Icons.arrow_forward_ios,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
     );
   }
 }
+
+// ignore: must_be_immutable
