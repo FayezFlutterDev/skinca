@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:skinca/core/constants/app_defaults.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -33,6 +34,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
   bool isExpanded = false;
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context)
@@ -56,26 +62,32 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         children: [
                           Stack(children: [
-                            const CircleAvatar(
-                              radius: 45,
-                              backgroundColor: Colors.red,
+                            CircleAvatar(
+                              radius: getProportionateScreenWidth(45),
+                              backgroundImage:
+                                  const AssetImage("assets/images/user.jpg"),
                             ),
                             Positioned(
                                 bottom: 10,
                                 right: 2,
-                                child: CircleAvatar(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.surface,
-                                  radius: 10,
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    size: 15,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    _pickImage();
+                                  },
+                                  child: CircleAvatar(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.surface,
+                                    radius: 10,
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 15,
+                                    ),
                                   ),
                                 ))
                           ]),
                           SizedBox(height: getProportionateScreenHeight(5)),
                           Text(
-                            'Your Name',
+                            'Abdullah Fayez',
                             style: textTheme.bodyLarge!
                                 .copyWith(fontWeight: FontWeight.bold),
                           )
@@ -87,12 +99,20 @@ class _ProfilePageState extends State<ProfilePage> {
                         Expanded(
                             child: Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 45,
-                              backgroundColor: Colors.red,
+                            SizedBox(
+                              width: getProportionateScreenHeight(20),
+                            ),
+                            CircleAvatar(
+                              radius: getProportionateScreenHeight(16),
+                              backgroundImage: const AssetImage(
+                                "assets/images/user.jpg",
+                              ),
+                            ),
+                            SizedBox(
+                              width: getProportionateScreenHeight(10),
                             ),
                             Text(
-                              'Your Name',
+                              'Abdullah Fayez',
                               style: textTheme.bodyLarge!
                                   .copyWith(fontWeight: FontWeight.bold),
                             )
@@ -121,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           textTheme: textTheme,
                           text: 'Profile Info',
                           icon: Icons.person,
-                          nextPage: '/edit_information',
+                          nextPage: '/profile-info',
                         ),
                         ExpansionTileItem(
                           textTheme: textTheme,

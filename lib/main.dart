@@ -1,14 +1,27 @@
 import 'dart:ui';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/constants/routes.dart';
+import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
 import 'package:skinca/views/home/theme_cubit.dart';
 
+import 'core/api/dio_consumer.dart';
+
 void main() {
-  runApp(BlocProvider(
-    create: (context) => ThemeCubit(),
-    child: const MyApp(),
-  ));
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ThemeCubit(),
+        ),
+        BlocProvider(
+          create: (context) => UserCubit(DioConsumer(dio: Dio())),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 /// Allows the ability to scroll by dragging with touch, mouse, and trackpad.
@@ -37,7 +50,7 @@ class _MyAppState extends State<MyApp> {
           debugShowCheckedModeBanner: false,
           title: 'SkinCa',
           routes: routes,
-          initialRoute: "/",
+          initialRoute: "/onboarding",
           themeMode: state.themeMode,
           theme: ThemeData(
             colorSchemeSeed: state.colorSelected.color,

@@ -1,176 +1,203 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/components/default_button.dart';
+import 'package:skinca/core/components/verified_dialog.dart';
 import 'package:skinca/core/constants/app_colors.dart';
+import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
+import 'package:skinca/views/auth/auth_cubit/user_state.dart';
 import 'package:skinca/views/auth/forget_password/forget_password.dart';
 import 'package:skinca/views/auth/sign_up/sign_up_page.dart';
+import 'package:skinca/views/entrypoint/entrypoint_ui.dart';
 import 'package:skinca/views/home/home.dart';
+
 import '../../core/components/divider.dart';
 import '../../core/components/social_card.dart';
-import '../../core/components/verified_dialog.dart';
 import '../../core/constants/app_defaults.dart';
 import '../../core/constants/icon_borken.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends StatelessWidget {
   static const String routeName = '/login';
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final TextEditingController emailController = TextEditingController();
-
-  final TextEditingController passwordController = TextEditingController();
-
-  bool visiblePass = false;
-  bool agree = false;
-
-  @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            IconBroken.Arrow___Left_2,
-            size: 36,
+    return BlocConsumer<UserCubit, UserState>(
+      listener: (context, state) {
+        if (context.read<UserCubit>().user != null) {
+          // ignore: curly_braces_in_flow_control_structures
+          if (state is SignInSuccess &&
+              context.read<UserCubit>().user!.isAuthenticated) {
+            showGeneralDialog(
+              barrierLabel: 'Dialog',
+              barrierDismissible: true,
+              context: context,
+              pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+                text: 'Yeay! 🎉\n Welcome Back',
+                text2: context.read<UserCubit>().user!.message,
+                text3: 'Go to Home',
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, EntryPointUI.routeName, (route) => false);
+                },
+              ),
+              transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
+                scale: anim1,
+                child: child,
+              ),
+            );
+          } else if (state is SignInFailure &&
+              context.read<UserCubit>().user?.isAuthenticated == false) {
+            showGeneralDialog(
+              barrierLabel: 'Dialog',
+              barrierDismissible: true,
+              context: context,
+              pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+                isVerified: false,
+                text: 'Oops! 😢',
+                text2: context.read<UserCubit>().user!.message,
+                text3: 'Try Again',
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
+                scale: anim1,
+                child: child,
+              ),
+            );
+          }
+        } else {
+          print("User is null");
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(
+                IconBroken.Arrow___Left_2,
+                size: 36,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            title: const Text(
+              'Login',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          'Login',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: EdgeInsets.all(getProportionateScreenWidth(20)),
-          child: SafeArea(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: SizeConfig.screenHeight * 0.02,
-                  ),
-                  buildEmailTextFormField(),
-                  SizedBox(
-                    height: SizeConfig.screenHeight * 0.02,
-                  ),
-                  buildPasswordTextFormField(),
-                  SizedBox(
-                    height: SizeConfig.screenHeight * 0.02,
-                  ),
-                  Row(
+          body: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.all(getProportionateScreenWidth(20)),
+              child: SafeArea(
+                child: Form(
+                  key: context.read<UserCubit>().signInFormKey,
+                  child: Column(
                     children: [
-                      Checkbox(
-                        value: agree,
-                        activeColor: AppColors.primary,
-                        onChanged: (value) {
-                          setState(() {
-                            agree = value!;
-                          });
-                        },
+                      SizedBox(
+                        height: SizeConfig.screenHeight * 0.02,
                       ),
-                      const Text("Remember me"),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(
-                            context, ForgetPassword.routeName),
-                        child: const Text(
-                          "Forgot Password!",
+                      buildEmailTextFormField(context),
+                      SizedBox(
+                        height: SizeConfig.screenHeight * 0.02,
+                      ),
+                      buildPasswordTextFormField(context),
+                      SizedBox(
+                        height: SizeConfig.screenHeight * 0.02,
+                      ),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: context.read<UserCubit>().agree,
+                            activeColor: AppColors.primary,
+                            onChanged: (value) {
+                              context.read<UserCubit>().agree = value!;
+                            },
+                          ),
+                          const Text("Remember me"),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => Navigator.pushNamed(
+                                context, ForgetPassword.routeName),
+                            child: const Text(
+                              "Forgot Password!",
+                              style: TextStyle(
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: AppColors.primary,
+                                  fontSize: 18,
+                                  color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: SizeConfig.screenHeight * 0.02,
+                      ),
+                      DefaultButton(
+                          text: "Login",
+                          press: () {
+                            if (context
+                                .read<UserCubit>()
+                                .signInFormKey
+                                .currentState!
+                                .validate()) {
+                              context.read<UserCubit>().signIn();
+                            }
+                          }),
+                      SizedBox(
+                        height: SizeConfig.screenHeight * 0.02,
+                      ),
+                      const Text("If you don't have an existing account,",
                           style: TextStyle(
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppColors.primary,
-                              fontSize: 18,
-                              color: AppColors.primary),
+                            fontSize: 18,
+                          )),
+                      GestureDetector(
+                        onTap: () =>
+                            Navigator.pushNamed(context, SignUpPage.routeName),
+                        child: const Text(
+                          "Sign Up",
+                          style:
+                              TextStyle(fontSize: 18, color: AppColors.primary),
                         ),
+                      ),
+                      SizedBox(
+                        height: SizeConfig.screenHeight * 0.04,
+                      ),
+                      const MyDivider(),
+                      SizedBox(
+                        height: SizeConfig.screenHeight * 0.02,
+                      ),
+                      const SocialCard(
+                          image: "assets/images/google.png",
+                          text: "Sign in  with Google"),
+                      SizedBox(height: getProportionateScreenHeight(20)),
+                      const SocialCard(
+                        image: "assets/images/facebook.png",
+                        text: "Sign in  with Facebook",
+                      ),
+                      SizedBox(height: getProportionateScreenHeight(20)),
+                      const SocialCard(
+                        image: "assets/images/TwitterX.png",
+                        text: "Sign in  with Twitter X",
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: SizeConfig.screenHeight * 0.02,
-                  ),
-                  DefaultButton(
-                      text: "Login",
-                      press: () {
-                        if (_formKey.currentState!.validate()) {
-                          
-                          showGeneralDialog(
-                            barrierLabel: 'Dialog',
-                            barrierDismissible: true,
-                            context: context,
-                            pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
-                              text: 'Yeay! 🎉\n Welcome Back',
-                              text2: 'You have logged in successfully',
-                              text3: 'Go to Home',
-                              onPressed: () {
-                                Navigator.pushNamedAndRemoveUntil(
-                                    context, HomePage.routeName, (route) => false);
-                              },
-                            ),
-                            transitionBuilder: (ctx, anim1, anim2, child) =>
-                                ScaleTransition(
-                              scale: anim1,
-                              child: child,
-                            ),
-                          );
-                        }
-                      }),
-                  SizedBox(
-                    height: SizeConfig.screenHeight * 0.02,
-                  ),
-                  const Text("If you don't have an existing account,",
-                      style: TextStyle(
-                        fontSize: 18,
-                      )),
-                  GestureDetector(
-                    onTap: () =>
-                        Navigator.pushNamed(context, SignUpPage.routeName),
-                    child: const Text(
-                      "Sign Up",
-                      style: TextStyle(fontSize: 18, color: AppColors.primary),
-                    ),
-                  ),
-                  SizedBox(
-                    height: SizeConfig.screenHeight * 0.04,
-                  ),
-                  const MyDivider(),
-                  SizedBox(
-                    height: SizeConfig.screenHeight * 0.02,
-                  ),
-                  const SocialCard(
-                      image: "assets/images/google.png",
-                      text: "Sign in  with Google"),
-                  SizedBox(height: getProportionateScreenHeight(20)),
-                  const SocialCard(
-                    image: "assets/images/facebook.png",
-                    text: "Sign in  with Facebook",
-                  ),
-                  SizedBox(height: getProportionateScreenHeight(20)),
-                  const SocialCard(
-                    image: "assets/images/TwitterX.png",
-                    text: "Sign in  with Twitter X",
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  TextFormField buildEmailTextFormField() {
+  TextFormField buildEmailTextFormField(BuildContext context) {
     return TextFormField(
-      controller: emailController,
+      controller: BlocProvider.of<UserCubit>(context).signInEmail,
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -198,11 +225,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  TextFormField buildPasswordTextFormField() {
+  TextFormField buildPasswordTextFormField(BuildContext context) {
     return TextFormField(
-      controller: passwordController,
+      controller: BlocProvider.of<UserCubit>(context).signInPassword,
       keyboardType: TextInputType.visiblePassword,
-      obscureText: visiblePass ? false : true,
+      obscureText: context.read<UserCubit>().visiblePass ? false : true,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return kPassNullError;
@@ -227,11 +254,10 @@ class _LoginPageState extends State<LoginPage> {
             color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w400),
         suffixIcon: IconButton(
           onPressed: () {
-            setState(() {
-              visiblePass = !visiblePass;
-            });
+            context.read<UserCubit>().visiblePass =
+                !context.read<UserCubit>().visiblePass;
           },
-          icon: visiblePass
+          icon: context.read<UserCubit>().visiblePass
               ? const Icon(
                   Icons.visibility,
                   size: 28,
