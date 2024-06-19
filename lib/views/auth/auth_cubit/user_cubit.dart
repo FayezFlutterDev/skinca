@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skinca/core/api/end_points.dart';
 import 'package:skinca/core/cache_helper.dart';
 import 'package:skinca/core/errors/exceptions.dart';
+import 'package:skinca/core/models/forgot_password_model.dart';
 import 'package:skinca/core/models/sign_in_model.dart';
 import 'package:skinca/views/auth/auth_cubit/user_state.dart';
 
@@ -40,6 +41,11 @@ class UserCubit extends Cubit<UserState> {
   TextEditingController confirmPassword = TextEditingController();
   bool visiblePass = false;
   bool agree = false;
+  bool isMailSelected = true;
+
+  TextEditingController forgotemailController = TextEditingController();
+  TextEditingController forgotPhoneController = TextEditingController();
+  final GlobalKey<FormState> forgotFormKey = GlobalKey<FormState>();
 
   SignInModel? user;
 
@@ -47,95 +53,138 @@ class UserCubit extends Cubit<UserState> {
   //   profilePic = image;
   //   emit(PickedProfilePic());
   // }
-   Future<void> signIn() async {
-    try {
-      emit(SignInLoading());
+  void toggleVisiblePass() {
+    visiblePass = !visiblePass;
+    emit(UserToggleVisiblePass(visiblePass));
+  }
 
-      final response = await api.post(EndPoint.login, data: {
-        ApiKey.email: signInEmail.text.trim(),
-        ApiKey.password: signInPassword.text.trim()
-      });
+  void toggleAgree(bool value) {
+    agree = value;
+    emit(UserToggleAgree(value));
+    }
+    void toggleMail() {
+      isMailSelected = !isMailSelected;
+      emit(UserToggleMail(isMailSelected));
+    }
 
-      // Log the response data for debugging
-      print('Response data: $response');
+    Future<void> signIn() async {
+      try {
+        emit(SignInLoading());
 
-      // Check if the response data is a Map
-      if (response is Map<String, dynamic>) {
-        // Now create the SignInModel from the parsed JSON
-        user = SignInModel.fromJson(response);
-// if (user != null && user!.token.isNotEmpty) {
-        if (user != null && user?.isAuthenticated==true) {
-          final decodeToken = JwtDecoder.decode(user!.token);
+        final response = await api.post(EndPoint.login, data: {
+          ApiKey.email: signInEmail.text.trim(),
+          ApiKey.password: signInPassword.text.trim()
+        });
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+        // Log the response data for debugging
+        print('Response data: $response');
 
-if(user!.token.isNotEmpty)
-        prefs.setString('token', user!.token);
-         prefs.setString('id', decodeToken['sub']);
-          // CacheHelper().saveData(key: 'token', value: user!.token);
-          // CacheHelper().saveData(key: 'id', value: decodeToken['sub']);       
+        // Check if the response data is a Map
+        if (response is Map<String, dynamic>) {
+          // Now create the SignInModel from the parsed JSON
+          user = SignInModel.fromJson(response);
 
-          emit(SignInSuccess());
+          // Log the user details for debugging
+          print('User: $user');
+
+          if (user != null && user!.isAuthenticated) {
+            // Handle case where token is null or empty
+            if (user!.token != null && user!.token!.isNotEmpty) {
+              final decodeToken = JwtDecoder.decode(user!.token!);
+
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString('token', user!.token!);
+              prefs.setString('id', decodeToken['sub']);
+
+              emit(SignInSuccess());
+            } else {
+              emit(SignInFailure('Token is missing in the response.'));
+            }
+          } else {
+            emit(SignInFailure(user?.message ?? 'Authentication failed.'));
+          }
         } else {
-          emit(SignInFailure(user!.message));
+          emit(SignInFailure('Invalid response format from the server.'));
         }
-      } else {
-        emit(SignInFailure('Invalid response format from the server.'));
+      } on ServerException catch (e) {
+        emit(SignInFailure(e.errorModel.message));
+      } catch (e) {
+        emit(SignInFailure('Unexpected error: $e'));
+        print('Unexpected error: $e');
       }
-    } on ServerException catch (e) {
-      emit(SignInFailure(e.errorModel.message));
-    } catch (e) {
-      emit(SignInFailure(user!.message));
-      print('Unexpected error: $e');
     }
-  }
 
-Future<void> signIn2() async {
-  try {
-    emit(SignInLoading());
+    Future<void> signIn2() async {
+      try {
+        emit(SignInLoading());
 
-    // Await the API response
-    final response = await api.post(EndPoint.login, data: {
-      ApiKey.email: signInEmail.text.trim(),
-      ApiKey.password: signInPassword.text.trim()
-    });
+        // Await the API response
+        final response = await api.post(EndPoint.login, data: {
+          ApiKey.email: signInEmail.text.trim(),
+          ApiKey.password: signInPassword.text.trim()
+        });
 
-    // Parse the JSON response body
-    final Map<String, dynamic> responseBody = json.decode(response.data);
+        // Parse the JSON response body
+        final Map<String, dynamic> responseBody = json.decode(response.data);
 
-    // Now create the SignInModel from the parsed JSON
-    user = SignInModel.fromJson(responseBody);
-    
-    final decodeToken = JwtDecoder.decode(user!.token);
+        // Now create the SignInModel from the parsed JSON
+        user = SignInModel.fromJson(responseBody);
 
-    CacheHelper().saveData(key: 'token', value: user!.token);
-    CacheHelper().saveData(key: 'id', value: decodeToken['sub']);
+        final decodeToken = JwtDecoder.decode(user!.token!);
 
-    emit(SignInSuccess());
-  } on ServerException catch (e) {
-    emit(SignInFailure(e.errorModel.message));
-  }
-}
+        CacheHelper().saveData(key: 'token', value: user!.token);
+        CacheHelper().saveData(key: 'id', value: decodeToken['sub']);
 
-  signUp() async {
+        emit(SignInSuccess());
+      } on ServerException catch (e) {
+        emit(SignInFailure(e.errorModel.message));
+      }
+    }
+
+    signUp() async {
+      try {
+        emit(SignInLoading());
+        final response = api.post(EndPoint.register, data: {
+          ApiKey.name: signUpName.text.trim(),
+          ApiKey.email: signUpEmail.text.trim(),
+          ApiKey.password: signUpPassword.text.trim(),
+          ApiKey.passwordConfirmation: confirmPassword.text.trim(),
+          ApiKey.phone: signUpPhoneNumber.text.trim(),
+        });
+        user = SignInModel.fromJson(await response);
+        final decodeToken = JwtDecoder.decode(user!.token!);
+
+        CacheHelper().saveData(key: 'token', value: user!.token);
+        CacheHelper().saveData(key: 'id', value: decodeToken['id']);
+
+        emit(SignInSuccess());
+      } on ServerException catch (e) {
+        emit(SignInFailure(e.errorModel.message));
+      }
+    }
+
+    Future<void> signOut() async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.remove('token');
+      prefs.remove('id');
+      emit(UserInitial());
+    }
+
+    Future<void> forgotPassword() async {
     try {
-      emit(SignInLoading());
-      final response = api.post(EndPoint.register, data: {
-        ApiKey.name: signUpName.text.trim(),
-        ApiKey.email: signUpEmail.text.trim(),
-        ApiKey.password: signUpPassword.text.trim(),
-        ApiKey.passwordConfirmation: confirmPassword.text.trim(),
-        ApiKey.phone: signUpPhoneNumber.text.trim(),
+      emit(ForgotPasswordLoading());
+      final response = await api.post(EndPoint.forgotPassword, data: {
+        ApiKey.email: forgotemailController.text.trim(),
       });
-      user = SignInModel.fromJson(await response);
-      final decodeToken = JwtDecoder.decode(user!.token);
-
-      CacheHelper().saveData(key: 'token', value: user!.token);
-      CacheHelper().saveData(key: 'id', value: decodeToken['id']);
-
-      emit(SignInSuccess());
+      final forgotPasswordResponse = ForgotPasswordResponse.fromJson(response);
+      emit(ForgotPasswordSuccess(forgotPasswordResponse.message));
     } on ServerException catch (e) {
-      emit(SignInFailure(e.errorModel.message));
+      emit(ForgotPasswordFailure(e.errorModel.message));
+    } catch (e) {
+      emit(ForgotPasswordFailure('Unexpected error: $e'));
     }
   }
 }
+  
+
+

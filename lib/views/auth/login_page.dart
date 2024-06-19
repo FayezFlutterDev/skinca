@@ -8,7 +8,6 @@ import 'package:skinca/views/auth/auth_cubit/user_state.dart';
 import 'package:skinca/views/auth/forget_password/forget_password.dart';
 import 'package:skinca/views/auth/sign_up/sign_up_page.dart';
 import 'package:skinca/views/entrypoint/entrypoint_ui.dart';
-import 'package:skinca/views/home/home.dart';
 
 import '../../core/components/divider.dart';
 import '../../core/components/social_card.dart';
@@ -24,54 +23,49 @@ class LoginPage extends StatelessWidget {
     SizeConfig().init(context);
     return BlocConsumer<UserCubit, UserState>(
       listener: (context, state) {
-        if (context.read<UserCubit>().user != null) {
-          // ignore: curly_braces_in_flow_control_structures
-          if (state is SignInSuccess &&
-              context.read<UserCubit>().user!.isAuthenticated) {
-            showGeneralDialog(
-              barrierLabel: 'Dialog',
-              barrierDismissible: true,
-              context: context,
-              pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
-                text: 'Yeay! 🎉\n Welcome Back',
-                text2: context.read<UserCubit>().user!.message,
-                text3: 'Go to Home',
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, EntryPointUI.routeName, (route) => false);
-                },
-              ),
-              transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
-                scale: anim1,
-                child: child,
-              ),
-            );
-          } else if (state is SignInFailure &&
-              context.read<UserCubit>().user?.isAuthenticated == false) {
-            showGeneralDialog(
-              barrierLabel: 'Dialog',
-              barrierDismissible: true,
-              context: context,
-              pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
-                isVerified: false,
-                text: 'Oops! 😢',
-                text2: context.read<UserCubit>().user!.message,
-                text3: 'Try Again',
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-              transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
-                scale: anim1,
-                child: child,
-              ),
-            );
-          }
-        } else {
-          print("User is null");
+        if (state is SignInSuccess &&
+            context.read<UserCubit>().user?.isAuthenticated == true) {
+          showGeneralDialog(
+            barrierLabel: 'Dialog',
+            barrierDismissible: true,
+            context: context,
+            pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+              text: 'Yeay! 🎉\n Welcome Back',
+              text2: context.read<UserCubit>().user!.message,
+              text3: 'Go to Home',
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, EntryPointUI.routeName, (route) => false);
+              },
+            ),
+            transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
+              scale: anim1,
+              child: child,
+            ),
+          );
+        } else if (state is SignInFailure) {
+          showGeneralDialog(
+            barrierLabel: 'Dialog',
+            barrierDismissible: true,
+            context: context,
+            pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+              isVerified: false,
+              text: 'Oops! 😢',
+              text2: state.message,
+              text3: 'Try Again',
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
+              scale: anim1,
+              child: child,
+            ),
+          );
         }
       },
       builder: (context, state) {
+        
         return Scaffold(
           appBar: AppBar(
             centerTitle: true,
@@ -115,7 +109,7 @@ class LoginPage extends StatelessWidget {
                             value: context.read<UserCubit>().agree,
                             activeColor: AppColors.primary,
                             onChanged: (value) {
-                              context.read<UserCubit>().agree = value!;
+                              context.read<UserCubit>().toggleAgree(value!);
                             },
                           ),
                           const Text("Remember me"),
@@ -137,6 +131,9 @@ class LoginPage extends StatelessWidget {
                       SizedBox(
                         height: SizeConfig.screenHeight * 0.02,
                       ),
+                      if (state is SignInLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else
                       DefaultButton(
                           text: "Login",
                           press: () {
@@ -229,7 +226,7 @@ class LoginPage extends StatelessWidget {
     return TextFormField(
       controller: BlocProvider.of<UserCubit>(context).signInPassword,
       keyboardType: TextInputType.visiblePassword,
-      obscureText: context.read<UserCubit>().visiblePass ? false : true,
+      obscureText: !context.read<UserCubit>().visiblePass,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return kPassNullError;
@@ -254,8 +251,7 @@ class LoginPage extends StatelessWidget {
             color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w400),
         suffixIcon: IconButton(
           onPressed: () {
-            context.read<UserCubit>().visiblePass =
-                !context.read<UserCubit>().visiblePass;
+            context.read<UserCubit>().toggleVisiblePass();
           },
           icon: context.read<UserCubit>().visiblePass
               ? const Icon(

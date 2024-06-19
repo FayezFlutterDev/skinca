@@ -1,8 +1,7 @@
-
 class SignInModel {
-  String message;
-  String token;
-  bool isAuthenticated;
+  final String message;
+  final String? token;
+  final bool isAuthenticated;
 
   SignInModel({
     required this.message,
@@ -12,17 +11,9 @@ class SignInModel {
 
   factory SignInModel.fromJson(Map<String, dynamic> json) {
     return SignInModel(
-      message: json['message']??'',
-      token: json['token']??'',
-      isAuthenticated: json['isAuthenticated']??false,
+      message: json['message'] as String? ?? '',
+      token: json['token'] as String?,
+      isAuthenticated: json['isAuthenticated'] ?? false,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'message': message,
-      'token': token,
-      'isAuthenticated': isAuthenticated,
-    };
   }
 }
