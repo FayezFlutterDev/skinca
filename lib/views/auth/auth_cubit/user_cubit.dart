@@ -1,16 +1,16 @@
 // ignore_for_file: avoid_print
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skinca/core/api/end_points.dart';
-import 'package:skinca/core/cache_helper.dart';
 import 'package:skinca/core/errors/exceptions.dart';
+import 'package:skinca/core/functions/upload_image_toapi.dart';
 import 'package:skinca/core/models/forgot_password_model.dart';
 import 'package:skinca/core/models/sign_in_model.dart';
+import 'package:skinca/core/models/sign_up_model.dart';
 import 'package:skinca/views/auth/auth_cubit/user_state.dart';
 
 import '../../../core/api/api_consumer.dart';
@@ -25,22 +25,30 @@ class UserCubit extends Cubit<UserState> {
   TextEditingController signInEmail = TextEditingController();
   //Sign in password
   TextEditingController signInPassword = TextEditingController();
-  //Sign Up Form key
-  GlobalKey<FormState> signUpFormKey = GlobalKey();
-  //Profile Pic
-  // XFile? profilePic;
-  //Sign up name
-  TextEditingController signUpName = TextEditingController();
-  //Sign up phone number
-  TextEditingController signUpPhoneNumber = TextEditingController();
-  //Sign up email
-  TextEditingController signUpEmail = TextEditingController();
-  //Sign up password
-  TextEditingController signUpPassword = TextEditingController();
-  //Sign up confirm password
-  TextEditingController confirmPassword = TextEditingController();
+
+  final GlobalKey<FormState> registerFormKey = GlobalKey<FormState>();
+
+  final TextEditingController registerFNameController = TextEditingController();
+
+  final TextEditingController registerLNameController = TextEditingController();
+
+  final TextEditingController registerPhoneController = TextEditingController();
+
+  final TextEditingController registerEmailController = TextEditingController();
+
+  final TextEditingController registerAddressController =
+      TextEditingController();
+
+  final TextEditingController registerPasswordController =
+      TextEditingController();
+
+  final TextEditingController registerConfirmPasswordController =
+      TextEditingController();
   bool visiblePass = false;
   bool agree = false;
+  bool registerVisiblePass = false;
+  bool registerAgree = false;
+  bool registerVisibleConfirmPass = false;
   bool isMailSelected = true;
 
   TextEditingController forgotemailController = TextEditingController();
@@ -48,129 +56,155 @@ class UserCubit extends Cubit<UserState> {
   final GlobalKey<FormState> forgotFormKey = GlobalKey<FormState>();
 
   SignInModel? user;
+  RegisterResponse? registerResponse;
 
-  // uploadProfilePic(XFile image) async {
-  //   profilePic = image;
-  //   emit(PickedProfilePic());
-  // }
+  XFile? profilePic;
+  bool isUploadPic = false;
+
+  uploadProfilePic(XFile image) async {
+    profilePic = image;
+    emit(PickedProfilePic());
+  }
+
   void toggleVisiblePass() {
     visiblePass = !visiblePass;
     emit(UserToggleVisiblePass(visiblePass));
   }
 
+  void toggleVisibleConfirmPass() {
+    registerVisibleConfirmPass = !registerVisibleConfirmPass;
+    emit(UserToggleVisibleConfirmPass(registerVisibleConfirmPass));
+  }
+
+  void toggleRegisterVisiblePass() {
+    registerVisiblePass = !registerVisiblePass;
+    emit(UserToggleRegisterVisiblePass(registerVisiblePass));
+  }
+
+  void toggleRegisterAgree(bool value) {
+    registerAgree = value;
+    emit(UserRegisterToggleAgree(value));
+  }
+
   void toggleAgree(bool value) {
     agree = value;
     emit(UserToggleAgree(value));
-    }
-    void toggleMail() {
-      isMailSelected = !isMailSelected;
-      emit(UserToggleMail(isMailSelected));
-    }
+  }
 
-    Future<void> signIn() async {
-      try {
-        emit(SignInLoading());
+  void toggleMail() {
+    isMailSelected = !isMailSelected;
+    emit(UserToggleMail(isMailSelected));
+  }
 
-        final response = await api.post(EndPoint.login, data: {
-          ApiKey.email: signInEmail.text.trim(),
-          ApiKey.password: signInPassword.text.trim()
-        });
+  Future<void> signIn() async {
+    try {
+      emit(SignInLoading());
 
-        // Log the response data for debugging
-        print('Response data: $response');
+      final response = await api.post(EndPoint.login, data: {
+        ApiKey.email: signInEmail.text.trim(),
+        ApiKey.password: signInPassword.text.trim()
+      });
 
-        // Check if the response data is a Map
-        if (response is Map<String, dynamic>) {
-          // Now create the SignInModel from the parsed JSON
-          user = SignInModel.fromJson(response);
+      if (response is Map<String, dynamic>) {
+        // Now create the SignInModel from the parsed JSON
+        user = SignInModel.fromJson(response);
 
-          // Log the user details for debugging
-          print('User: $user');
+        // Log the user details for debugging
+        print('User: $user');
 
-          if (user != null && user!.isAuthenticated) {
-            // Handle case where token is null or empty
-            if (user!.token != null && user!.token!.isNotEmpty) {
-              final decodeToken = JwtDecoder.decode(user!.token!);
+        if (user != null && user!.isAuthenticated) {
+          // Handle case where token is null or empty
+          if (user!.token.isNotEmpty) {
+            final decodeToken = JwtDecoder.decode(user!.token);
 
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.setString('token', user!.token!);
-              prefs.setString('id', decodeToken['sub']);
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            prefs.setString('token', user!.token);
+            prefs.setString('id', decodeToken['sub']);
 
-              emit(SignInSuccess());
-            } else {
-              emit(SignInFailure('Token is missing in the response.'));
-            }
+            emit(SignInSuccess());
           } else {
-            emit(SignInFailure(user?.message ?? 'Authentication failed.'));
+            emit(SignInFailure('Token is missing in the response.'));
           }
         } else {
-          emit(SignInFailure('Invalid response format from the server.'));
+          emit(SignInFailure(user?.message ?? 'Authentication failed.'));
         }
-      } on ServerException catch (e) {
-        emit(SignInFailure(e.errorModel.message));
-      } catch (e) {
-        emit(SignInFailure('Unexpected error: $e'));
-        print('Unexpected error: $e');
+      } else {
+        emit(SignInFailure('Invalid response format from the server.'));
       }
+    } on ServerException catch (e) {
+      emit(SignInFailure(e.errorModel.message));
+    } catch (e) {
+      emit(SignInFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
     }
+  }
 
-    Future<void> signIn2() async {
-      try {
-        emit(SignInLoading());
+  Future<void> signUp() async {
+    try {
+      emit(SignUpLoading());
 
-        // Await the API response
-        final response = await api.post(EndPoint.login, data: {
-          ApiKey.email: signInEmail.text.trim(),
-          ApiKey.password: signInPassword.text.trim()
-        });
+      final response = await api.post(
+        EndPoint.register,
+        data: {
+          ApiKey.fName: registerFNameController.text.trim(),
+          ApiKey.lName: registerLNameController.text.trim(),
+          ApiKey.email: registerEmailController.text.trim(),
+          ApiKey.password: registerPasswordController.text.trim(),
+          ApiKey.address: registerAddressController.text.trim(),
+          ApiKey.confirmPassword: registerConfirmPasswordController.text.trim(),
+          ApiKey.phoneNumber: registerPhoneController.text.trim(),
+          ApiKey.profilePicture: await uploadImageToAPI(profilePic!),
+        },
+        isFormData: true,
+      );
 
-        // Parse the JSON response body
-        final Map<String, dynamic> responseBody = json.decode(response.data);
+      // Log the response data for debugging
+      
+      // Check if the response data is a Map
+      if (response is Map<String, dynamic>) {
+        // Now create the RegisterResponse from the parsed JSON
+        registerResponse = RegisterResponse.fromJson(response);
 
-        // Now create the SignInModel from the parsed JSON
-        user = SignInModel.fromJson(responseBody);
+        // Log the user details for debugging
+        print('User: $registerResponse');
 
-        final decodeToken = JwtDecoder.decode(user!.token!);
+        if (registerResponse != null && registerResponse!.isAuthenticated) {
+          // Handle case where token is null or empty
+          if (registerResponse!.token.isNotEmpty) {
+            final decodeToken = JwtDecoder.decode(registerResponse!.token);
 
-        CacheHelper().saveData(key: 'token', value: user!.token);
-        CacheHelper().saveData(key: 'id', value: decodeToken['sub']);
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            prefs.setString('token', registerResponse!.token);
+            prefs.setString('id', decodeToken['sub']);
 
-        emit(SignInSuccess());
-      } on ServerException catch (e) {
-        emit(SignInFailure(e.errorModel.message));
+            emit(SignUpSuccess(registerResponse!.message));
+          } else {
+            emit(SignUpFailure('Token is missing in the response.'));
+          }
+        } else {
+          emit(SignUpFailure(registerResponse?.message ?? 'Authentication failed.'));
+        }
+      } else {
+        emit(SignUpFailure('Invalid response format from the server.'));
       }
+
+      
+    } on ServerException catch (e) {
+      emit(SignUpFailure(e.errorModel.message));
+    } catch (e) {
+      emit(SignUpFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
     }
+  }
 
-    signUp() async {
-      try {
-        emit(SignInLoading());
-        final response = api.post(EndPoint.register, data: {
-          ApiKey.name: signUpName.text.trim(),
-          ApiKey.email: signUpEmail.text.trim(),
-          ApiKey.password: signUpPassword.text.trim(),
-          ApiKey.passwordConfirmation: confirmPassword.text.trim(),
-          ApiKey.phone: signUpPhoneNumber.text.trim(),
-        });
-        user = SignInModel.fromJson(await response);
-        final decodeToken = JwtDecoder.decode(user!.token!);
+  Future<void> signOut() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('token');
+    prefs.remove('id');
+    emit(UserInitial());
+  }
 
-        CacheHelper().saveData(key: 'token', value: user!.token);
-        CacheHelper().saveData(key: 'id', value: decodeToken['id']);
-
-        emit(SignInSuccess());
-      } on ServerException catch (e) {
-        emit(SignInFailure(e.errorModel.message));
-      }
-    }
-
-    Future<void> signOut() async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.remove('token');
-      prefs.remove('id');
-      emit(UserInitial());
-    }
-
-    Future<void> forgotPassword() async {
+  Future<void> forgotPassword() async {
     try {
       emit(ForgotPasswordLoading());
       final response = await api.post(EndPoint.forgotPassword, data: {
@@ -185,6 +219,3 @@ class UserCubit extends Cubit<UserState> {
     }
   }
 }
-  
-
-

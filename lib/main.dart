@@ -1,15 +1,17 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/constants/routes.dart';
 import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
+import 'package:skinca/views/home/home_cubit/home_cubit.dart';
 import 'package:skinca/views/home/theme_cubit.dart';
 
 import 'core/api/dio_consumer.dart';
 
-void main() {
-  runApp(
+void main2() {
+   runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -18,10 +20,40 @@ void main() {
         BlocProvider(
           create: (context) => UserCubit(DioConsumer(dio: Dio())),
         ),
+        BlocProvider(
+          create: (context) => HomeCubit(DioConsumer(dio: Dio())),
+        ),
       ],
       child: const MyApp(),
     ),
   );
+
+
+}
+Future<void> main() async {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    runApp(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => ThemeCubit(),
+          ),
+          BlocProvider(
+            create: (context) => UserCubit(DioConsumer(dio: Dio())),
+          ),
+          BlocProvider(
+            create: (context) => HomeCubit(DioConsumer(dio: Dio())),
+          ),
+        ],
+        child: const MyApp(),
+      ),
+    );
+  }, (error, stackTrace) {
+    // ignore: avoid_print
+    print('runZonedGuarded: Caught error in my root zone.');
+  });
 }
 
 /// Allows the ability to scroll by dragging with touch, mouse, and trackpad.

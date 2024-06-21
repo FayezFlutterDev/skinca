@@ -1,11 +1,16 @@
+import 'dart:convert';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:skinca/core/constants/constants.dart';
+import 'package:skinca/core/models/banner_model.dart';
+import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
 import 'package:skinca/views/disease_details/disease_details.dart';
 import 'package:skinca/views/doctor_details/doctor_details.dart';
-import 'package:skinca/views/profile/profile.dart';
+import 'package:skinca/views/home/home_cubit/home_cubit.dart';
+import 'package:skinca/views/home/home_cubit/home_states.dart';
+import 'package:skinca/views/profile/screens/profile_info.dart';
 
 import 'components/color_button.dart';
 import 'components/theme_button.dart';
@@ -23,6 +28,7 @@ class HomePage extends StatelessWidget {
         .textTheme
         .apply(displayColor: Theme.of(context).colorScheme.onSurface);
     SizeConfig().init(context);
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: PreferredSize(
@@ -39,10 +45,27 @@ class HomePage extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: getProportionateScreenWidth(16),
-                  backgroundImage: const AssetImage("assets/images/user.jpg"),
+                  backgroundImage: context.read<UserCubit>().user?.picture !=
+                          null
+                      ? Image.memory(
+                          const Base64Decoder().convert(
+                              context.read<UserCubit>().user!.picture!),
+                          fit: BoxFit.cover,
+                        ).image
+                      : context.read<UserCubit>().registerResponse?.picture !=
+                              null
+                          ? Image.memory(
+                              const Base64Decoder().convert(context
+                                  .read<UserCubit>()
+                                  .registerResponse!
+                                  .picture!),
+                              fit: BoxFit.cover,
+                            ).image
+                          : const AssetImage("assets/images/avatar.png")
+                              as ImageProvider,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, ProfilePage.routeName);
+                      Navigator.pushNamed(context, ProfileInfoPage.routeName);
                     },
                   ),
                 ),
@@ -52,7 +75,9 @@ class HomePage extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Welcome, Abdullah!", style: textTheme.titleMedium),
+                    Text(
+                        "Welcome, ${context.read<UserCubit>().user?.name ?? context.read<UserCubit>().registerResponse?.name}",
+                        style: textTheme.titleMedium),
                     Text(
                       "How are you today?",
                       style: textTheme.bodySmall,
@@ -92,10 +117,28 @@ class HomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: SizeConfig.screenHeight * 0.244,
-                  width: double.infinity,
-                  child: CarouselSliderCard(textTheme: textTheme),
+                BlocBuilder<HomeCubit, HomeState>(
+                  builder: (context, state) {
+                    if (state is HomeInitial) {
+                      context.read<HomeCubit>().getBanners();
+                    }
+                    if (state is BannersLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (state is BannersSuccess) {
+                      return SizedBox(
+                        height: SizeConfig.screenHeight * 0.244,
+                        width: double.infinity,
+                        child: CarouselSliderCard(
+                          banners: state.banners,
+                          textTheme: textTheme,
+                        ),
+                      );
+                    } else if (state is BannersFailure) {
+                      return Center(child: Text(state.error));
+                    } else {
+                      return const SizedBox.shrink();
+                    }
+                  },
                 ),
                 Row(
                   children: [
@@ -253,66 +296,40 @@ class CarouselSliderCard extends StatelessWidget {
   const CarouselSliderCard({
     super.key,
     required this.textTheme,
+    required this.banners,
   });
 
   final TextTheme textTheme;
+  final List<BannerModel> banners;
 
   @override
   Widget build(BuildContext context) {
     return CarouselSlider(
-        options: CarouselOptions(
-          autoPlay: true,
-          aspectRatio: 16 / 9,
-          enlargeCenterPage: true,
-          viewportFraction: 1.0,
-        ),
-        items: [
-          SizedBox(
-            width: double.infinity,
-            child: Card(
-              elevation: 4,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: getProportionateScreenHeight(16),
-                  left: getProportionateScreenWidth(20),
-                ),
-                child: Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "New Medical Center",
-                          style: textTheme.headlineLarge,
-                        ),
-                        SizedBox(
-                          width: getProportionateScreenWidth(10),
-                        ),
-                        SizedBox(
-                          height: getProportionateScreenHeight(10),
-                        ),
-                        Text(
-                          "We provide comprehensive, \nhigh-quality healthcare\n services in a comfortable and\n modern environment.",
-                          style: textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 4,
-                        ),
-                      ],
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Image.asset(
-                        'assets/images/medical.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ],
-                ),
+      options: CarouselOptions(
+        autoPlay: true,
+        aspectRatio: 16 / 9,
+        enlargeCenterPage: true,
+        viewportFraction: 1.0,
+      ),
+      items: banners.map((banner) {
+        return SizedBox(
+          width: double.infinity,
+          child: Card(
+            elevation: 4,
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: getProportionateScreenHeight(16),
+                left: getProportionateScreenWidth(20),
+              ),
+              child: Image.memory(
+                const Base64Decoder().convert(banner.imageUrl),
+                fit: BoxFit.cover,
               ),
             ),
           ),
-        ]);
+        );
+      }).toList(),
+    );
   }
 }
 

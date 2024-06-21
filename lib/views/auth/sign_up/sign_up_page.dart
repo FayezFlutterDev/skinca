@@ -1,5 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:skinca/core/components/verified_dialog.dart';
 import 'package:skinca/core/utils/keyboard.dart';
+import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
+import 'package:skinca/views/auth/auth_cubit/user_state.dart';
 import 'package:skinca/views/auth/login_page.dart';
 
 import '../../../core/components/default_button.dart';
@@ -7,196 +14,304 @@ import '../../../core/constants/constants.dart';
 import '../../../core/constants/icon_borken.dart';
 import 'privacy.dart';
 
-class SignUpPage extends StatefulWidget {
+class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
   static String routeName = '/sign_up';
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
-}
-
-class _SignUpPageState extends State<SignUpPage> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final TextEditingController fNameController = TextEditingController();
-
-  final TextEditingController lNameController = TextEditingController();
-
-  final TextEditingController phoneController = TextEditingController();
-
-  final TextEditingController emailController = TextEditingController();
-
-  final TextEditingController addressController = TextEditingController();
-
-  final TextEditingController passwordController = TextEditingController();
-
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
-  bool visiblePass = false;
-  bool visibleConfirmPass = false;
-  bool agree = false;
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            IconBroken.Arrow___Left_2,
-            size: 36,
+    return BlocConsumer<UserCubit, UserState>(
+      listener: (context, state) {
+        
+        if (state is SignUpSuccess &&
+            context.read<UserCubit>().registerResponse?.isAuthenticated ==
+                true) {
+          showGeneralDialog(
+            barrierLabel: 'Dialog',
+            barrierDismissible: true,
+            context: context,
+            pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+              text: 'Yeay! 🎉\n Successfully Registered',
+              text2: context.read<UserCubit>().registerResponse!.message,
+              text3: 'Login Now',
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, LoginPage.routeName, (route) => false);
+              },
+            ),
+            transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
+              scale: anim1,
+              child: child,
+            ),
+          );
+        } else if (state is SignUpFailure) {
+          showGeneralDialog(
+            barrierLabel: 'Dialog',
+            barrierDismissible: true,
+            context: context,
+            pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+              isVerified: false,
+              text: 'Oops! 😢',
+              text2: state.message,
+              text3: 'Try Again',
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            transitionBuilder: (ctx, anim1, anim2, child) => ScaleTransition(
+              scale: anim1,
+              child: child,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(
+                IconBroken.Arrow___Left_2,
+                size: 36,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            title: const Text(
+              'Sign Up',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          'Sign Up',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDefaults.padding),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  buildFNameTextFormField(),
-                  SizedBox(height: SizeConfig.screenHeight * 0.01),
-                  buildLNameTextFormField(),
-                  SizedBox(height: SizeConfig.screenHeight * 0.01),
-                  buildEmailTextFormField(),
-                  SizedBox(height: SizeConfig.screenHeight * 0.01),
-                  buildAddressTextFormField(),
-                  SizedBox(height: SizeConfig.screenHeight * 0.01),
-                  buildPhoneTextFormField(),
-                  SizedBox(height: SizeConfig.screenHeight * 0.01),
-                  buildPasswordTextFormField(),
-                  SizedBox(height: SizeConfig.screenHeight * 0.01),
-                  buildConfirmPasswordTextFormField(),
-                  SizedBox(height: SizeConfig.screenHeight * 0.01),
-                  Row(
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDefaults.padding),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Form(
+                  key: context.read<UserCubit>().registerFormKey,
+                  child: Column(
                     children: [
-                      Checkbox(
-                        value: agree,
-                        activeColor: AppColors.primary,
-                        onChanged: (value) {
-                          setState(() {
-                            agree = value!;
-                          });
-                        },
-                      ),
-                      SizedBox(width: getProportionateScreenWidth(8)),
-                      Expanded(
-                        child: RichText(
-                            text: TextSpan(
-                          text: 'I agree to the ',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          children: [
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                      isScrollControlled: true,
-                                      context: context,
-                                      builder: (context) {
-                                        return const Privacy();
-                                      });
-                                },
-                                child: const Text(
-                                  'Terms of Service',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
+                      context.read<UserCubit>().profilePic == null
+                          ? Stack(children: [
+                              CircleAvatar(
+                                radius: getProportionateScreenWidth(35),
+                                backgroundImage: const AssetImage(
+                                    "assets/images/avatar.png"),
                               ),
+                              Positioned(
+                                  bottom: 5,
+                                  right: 5,
+                                  child: Container(
+                                    height: 25,
+                                    width: 25,
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade400,
+                                      border: Border.all(
+                                          color: Colors.white, width: 3),
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        ImagePicker()
+                                            .pickImage(
+                                                source: ImageSource.gallery)
+                                            .then((value) {
+                                          if (value != null) {
+                                            context
+                                                .read<UserCubit>()
+                                                .uploadProfilePic(value);
+                                          }
+                                        });
+                                      },
+                                      child: CircleAvatar(
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .surface,
+                                        radius: 5,
+                                        child: const Icon(
+                                          Icons.camera_alt_sharp,
+                                          size: 15,
+                                        ),
+                                      ),
+                                    ),
+                                  ))
+                            ])
+                          : CircleAvatar(
+                              radius: getProportionateScreenWidth(35),
+                              backgroundImage: FileImage(File(
+                                  context.read<UserCubit>().profilePic!.path)),
                             ),
-                            const TextSpan(
-                              text: ' and ',
-                              style: TextStyle(
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      buildFNameTextFormField(context),
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      buildLNameTextFormField(context),
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      buildEmailTextFormField(context),
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      buildAddressTextFormField(context),
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      buildPhoneTextFormField(context),
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      buildPasswordTextFormField(context),
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      DropdownButtonFormField<String>(
+                        onChanged: (String? newValue) {},
+                        items: <String>["Yes", "No"]
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(
+                            IconBroken.Work,
+                            size: 28,
+                            color: AppColors.primary,
+                          ),
+                          fillColor: const Color(0xFFF9FAFC),
+                          filled: true,
+                          enabledBorder: outlineInputBorder(),
+                          focusedBorder: outlineInputBorder(),
+                          border: outlineInputBorder(),
+                          hintText: "Are you a doctor?",
+                          hintStyle: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400),
+                        ),
+                      ),
+                      SizedBox(height: SizeConfig.screenHeight * 0.01),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: context.read<UserCubit>().registerAgree,
+                            activeColor: AppColors.primary,
+                            onChanged: (value) {
+                              context
+                                  .read<UserCubit>()
+                                  .toggleRegisterAgree(value!);
+                            },
+                          ),
+                          SizedBox(width: getProportionateScreenWidth(8)),
+                          Expanded(
+                            child: RichText(
+                                text: TextSpan(
+                              text: 'I agree to the ',
+                              style: const TextStyle(
                                 color: Colors.grey,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
-                            ),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  KeyboardUtil.hideKeyboard(context);
-                                  showModalBottomSheet(
-                                      isScrollControlled: true,
-                                      context: context,
-                                      builder: (context) {
-                                        return const Privacy();
-                                      });
-                                },
-                                child: const Text(
-                                  'Privacy Policy',
+                              children: [
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                          isScrollControlled: true,
+                                          context: context,
+                                          builder: (context) {
+                                            return const Privacy();
+                                          });
+                                    },
+                                    child: const Text(
+                                      'Terms of Service',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const TextSpan(
+                                  text: ' and ',
                                   style: TextStyle(
-                                    color: AppColors.primary,
+                                    color: Colors.grey,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
-                              ),
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      KeyboardUtil.hideKeyboard(context);
+                                      showModalBottomSheet(
+                                          isScrollControlled: true,
+                                          context: context,
+                                          builder: (context) {
+                                            return const Privacy();
+                                          });
+                                    },
+                                    child: const Text(
+                                      'Privacy Policy',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: SizeConfig.screenHeight * 0.02),
+                      (state is SignUpLoading)
+                          ? const CircularProgressIndicator()
+                          : DefaultButton(
+                              text: 'Sign Up',
+                              press: () {
+                                if (context
+                                    .read<UserCubit>()
+                                    .registerFormKey
+                                    .currentState!
+                                    .validate()) {
+                                  context.read<UserCubit>().signUp();
+                                }
+                              },
                             ),
-                          ],
-                        )),
+                      SizedBox(height: SizeConfig.screenHeight * 0.02),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Already have an account?",
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, LoginPage.routeName);
+                            },
+                            child: const Text(
+                              " Login",
+                              style: TextStyle(
+                                  fontSize: 18, color: AppColors.primary),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  SizedBox(height: SizeConfig.screenHeight * 0.02),
-                  DefaultButton(
-                    text: 'Sign Up',
-                    press: () {
-                      if (_formKey.currentState!.validate()) {}
-                    },
-                  ),
-                  SizedBox(height: SizeConfig.screenHeight * 0.02),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Already have an account?",
-                        style: TextStyle(
-                          fontSize: 18,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, LoginPage.routeName);
-                        },
-                        child: const Text(
-                          " Login",
-                          style:
-                              TextStyle(fontSize: 18, color: AppColors.primary),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  TextFormField buildPhoneTextFormField() {
+  TextFormField buildPhoneTextFormField(BuildContext context) {
     return TextFormField(
-      controller: phoneController,
+      controller: context.read<UserCubit>().registerPhoneController,
       keyboardType: TextInputType.phone,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -222,9 +337,9 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  TextFormField buildAddressTextFormField() {
+  TextFormField buildAddressTextFormField(BuildContext context) {
     return TextFormField(
-      controller: addressController,
+      controller: context.read<UserCubit>().registerAddressController,
       keyboardType: TextInputType.text,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -250,9 +365,9 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  TextFormField buildLNameTextFormField() {
+  TextFormField buildLNameTextFormField(BuildContext context) {
     return TextFormField(
-      controller: lNameController,
+      controller: context.read<UserCubit>().registerLNameController,
       keyboardType: TextInputType.text,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -278,9 +393,9 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  TextFormField buildFNameTextFormField() {
+  TextFormField buildFNameTextFormField(BuildContext context) {
     return TextFormField(
-      controller: fNameController,
+      controller: context.read<UserCubit>().registerFNameController,
       keyboardType: TextInputType.text,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -306,9 +421,9 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  TextFormField buildEmailTextFormField() {
+  TextFormField buildEmailTextFormField(BuildContext context) {
     return TextFormField(
-      controller: emailController,
+      controller: context.read<UserCubit>().registerEmailController,
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -336,11 +451,11 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  TextFormField buildPasswordTextFormField() {
+  TextFormField buildPasswordTextFormField(BuildContext context) {
     return TextFormField(
-      controller: passwordController,
+      controller: context.read<UserCubit>().registerPasswordController,
       keyboardType: TextInputType.visiblePassword,
-      obscureText: visiblePass ? false : true,
+      obscureText: context.read<UserCubit>().registerVisiblePass ? false : true,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return kPassNullError;
@@ -365,11 +480,9 @@ class _SignUpPageState extends State<SignUpPage> {
             color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w400),
         suffixIcon: IconButton(
           onPressed: () {
-            setState(() {
-              visiblePass = !visiblePass;
-            });
+            context.read<UserCubit>().toggleRegisterVisiblePass();
           },
-          icon: visiblePass
+          icon: context.read<UserCubit>().registerVisiblePass
               ? const Icon(
                   Icons.visibility,
                   size: 28,
@@ -385,15 +498,17 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  TextFormField buildConfirmPasswordTextFormField() {
+  TextFormField buildConfirmPasswordTextFormField(BuildContext context) {
     return TextFormField(
-      controller: confirmPasswordController,
+      controller: context.read<UserCubit>().registerConfirmPasswordController,
       keyboardType: TextInputType.visiblePassword,
-      obscureText: visibleConfirmPass ? false : true,
+      obscureText:
+          context.read<UserCubit>().registerVisibleConfirmPass ? false : true,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return kPassNullError;
-        } else if (value != passwordController.text) {
+        } else if (value !=
+            context.read<UserCubit>().registerPasswordController.text) {
           return kMatchPassError;
         }
         return null;
@@ -415,11 +530,9 @@ class _SignUpPageState extends State<SignUpPage> {
             color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w400),
         suffixIcon: IconButton(
           onPressed: () {
-            setState(() {
-              visibleConfirmPass = !visibleConfirmPass;
-            });
+            context.read<UserCubit>().toggleVisibleConfirmPass();
           },
-          icon: visibleConfirmPass
+          icon: context.read<UserCubit>().registerVisibleConfirmPass
               ? const Icon(
                   Icons.visibility,
                   size: 28,

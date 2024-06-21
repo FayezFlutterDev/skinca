@@ -6,7 +6,6 @@ import 'package:skinca/views/home/home.dart';
 import 'package:skinca/views/notification/notification_page.dart';
 import 'package:skinca/views/profile/profile.dart';
 import 'package:skinca/views/search/search_page.dart';
-
 import '../../core/constants/constants.dart';
 import '../home/theme_cubit.dart';
 import 'components/app_navigation_bar.dart';
@@ -28,7 +27,7 @@ class _EntryPointUIState extends State<EntryPointUI> {
   }
 
   List<Widget> pages = [
-    const HomePage(),
+   const HomePage(),
     const SearchPage(),
     ChatPage(),
     const NotificationPage(),

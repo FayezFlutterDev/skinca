@@ -13,7 +13,6 @@ import 'package:skinca/views/onboarding/onboarding_page.dart';
 import 'package:skinca/views/profile/profile.dart';
 import 'package:skinca/views/profile/screens/profile_info.dart';
 import 'package:skinca/views/search/search_page.dart';
-
 import '../../views/auth/forget_password/create_new_password.dart';
 
 final Map<String, WidgetBuilder> routes = {
@@ -27,7 +26,7 @@ final Map<String, WidgetBuilder> routes = {
   ForgetPassword.routeName: (context) => const ForgetPassword(),
   CreateNewPassword.routeName: (context) => const CreateNewPassword(),
   VerificationCode.routeName: (context) => VerificationCode(),
-  HomePage.routeName: (context) => const HomePage(),
+  HomePage.routeName: (context) =>  const HomePage(),
   OnboardingPage.routeName: (context) => const OnboardingPage(),
   DoctorDetailsPage.routeName: (context) => const DoctorDetailsPage(),
   DiseaseDetailsPage.routeName: (context) => const DiseaseDetailsPage(),

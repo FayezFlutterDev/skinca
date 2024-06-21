@@ -19,6 +19,20 @@ class UserToggleVisiblePass extends UserState {
 
   UserToggleVisiblePass(this.visiblePass);
 }
+
+class UserToggleVisibleConfirmPass extends UserState {
+  final bool registerVisibleConfirmPass;
+
+  UserToggleVisibleConfirmPass(this.registerVisibleConfirmPass);
+}
+
+class UserToggleRegisterVisiblePass extends UserState {
+  final bool registerVisiblePass;
+
+  UserToggleRegisterVisiblePass(this.registerVisiblePass);
+}
+
+
 class UserToggleMail extends UserState {
   final bool isMailSelected;
 
@@ -30,6 +44,13 @@ class UserToggleAgree extends UserState {
 
   UserToggleAgree(this.agree);
 }
+
+class UserRegisterToggleAgree extends UserState {
+  final bool agree;
+
+  UserRegisterToggleAgree(this.agree);
+}
+
 class ForgotPasswordLoading extends UserState {}
 
 class ForgotPasswordSuccess extends UserState {
@@ -42,6 +63,21 @@ class ForgotPasswordFailure extends UserState {
   final String message;
 
   ForgotPasswordFailure(this.message);
+}
+
+// Sign Up
+
+class SignUpLoading extends UserState {}
+
+class SignUpSuccess extends UserState {
+  final String message;
+  SignUpSuccess(this.message);
+}
+
+class SignUpFailure extends UserState {
+  final String message;
+
+  SignUpFailure(this.message);
 }
 
 
