@@ -10,26 +10,7 @@ import 'package:skinca/views/home/theme_cubit.dart';
 
 import 'core/api/dio_consumer.dart';
 
-void main2() {
-   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => ThemeCubit(),
-        ),
-        BlocProvider(
-          create: (context) => UserCubit(DioConsumer(dio: Dio())),
-        ),
-        BlocProvider(
-          create: (context) => HomeCubit(DioConsumer(dio: Dio())),
-        ),
-      ],
-      child: const MyApp(),
-    ),
-  );
 
-
-}
 Future<void> main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +25,7 @@ Future<void> main() async {
             create: (context) => UserCubit(DioConsumer(dio: Dio())),
           ),
           BlocProvider(
-            create: (context) => HomeCubit(DioConsumer(dio: Dio())),
+            create: (context) => HomeCubit(DioConsumer(dio: Dio()))..getBanners()..getDiseases()..getDoctors(),
           ),
         ],
         child: const MyApp(),

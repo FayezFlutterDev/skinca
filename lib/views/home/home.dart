@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/constants/constants.dart';
 import 'package:skinca/core/models/banner_model.dart';
+import 'package:skinca/core/models/disease_model.dart';
+import 'package:skinca/core/models/doctor_model.dart';
 import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
 import 'package:skinca/views/disease_details/disease_details.dart';
 import 'package:skinca/views/doctor_details/doctor_details.dart';
@@ -110,162 +112,213 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(getProportionateScreenWidth(12)),
-        child: SafeArea(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                BlocBuilder<HomeCubit, HomeState>(
-                  builder: (context, state) {
-                    if (state is HomeInitial) {
-                      context.read<HomeCubit>().getBanners();
-                    }
-                    if (state is BannersLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (state is BannersSuccess) {
-                      return SizedBox(
-                        height: SizeConfig.screenHeight * 0.244,
-                        width: double.infinity,
-                        child: CarouselSliderCard(
-                          banners: state.banners,
+      body: BlocConsumer<HomeCubit, HomeState>(
+        listener: (context, state) {
+          if (state is HomeInitial) {
+            context.read<HomeCubit>().getBanners();
+            context.read<HomeCubit>().getDiseases();
+            context.read<HomeCubit>().getDoctors();
+          }
+          if (state is BannersFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          if (state is DiseasesFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          if (state is DoctorsFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return Padding(
+            padding: EdgeInsets.all(getProportionateScreenWidth(12)),
+            child: SafeArea(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (state is BannersLoading ||
+                      state is DiseasesLoading ||
+                      state is DoctorsLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else ...[
+                    SizedBox(
+                      height: SizeConfig.screenHeight * 0.244,
+                      width: double.infinity,
+                      child: CarouselSliderCard(
+                        banners: context.read<HomeCubit>().banners,
+                        textTheme: textTheme,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        HeaderText(
+                          text: "Diseases & Conditions",
                           textTheme: textTheme,
                         ),
-                      );
-                    } else if (state is BannersFailure) {
-                      return Center(child: Text(state.error));
-                    } else {
-                      return const SizedBox.shrink();
-                    }
-                  },
-                ),
-                Row(
-                  children: [
-                    HeaderText(
-                      text: "Diseases & Conditions",
-                      textTheme: textTheme,
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "Show All",
-                        style: textTheme.bodyMedium!.copyWith(
-                          color: AppColors.primary,
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "Show All",
+                            style: textTheme.bodyMedium!.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-                SizedBox(
-                  height: getProportionateScreenHeight(100),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: 10,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        child: const DiseaseItem(),
-                        onTap: () {
-                          Navigator.pushNamed(
-                              context, DiseaseDetailsPage.routeName);
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Row(
-                  children: [
-                    HeaderText(
-                      text: "Doctors nearby you",
-                      textTheme: textTheme,
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "See All",
-                        style: textTheme.bodyMedium!.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: SizeConfig.screenHeight * 0.2334,
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: ((context, index) {
-                        return Padding(
-                          padding: EdgeInsets.only(
-                              right: getProportionateScreenWidth(12)),
-                          child: GestureDetector(
-                            child: const DoctorCard(),
+                    SizedBox(
+                      height: getProportionateScreenHeight(100),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: context.read<HomeCubit>().diseases.length,
+                        itemBuilder: (context, index) {
+                          final disease =
+                              context.read<HomeCubit>().diseases[index];
+                          return GestureDetector(
                             onTap: () {
                               Navigator.pushNamed(
-                                  context, DoctorDetailsPage.routeName);
+                                  context, DiseaseDetailsPage.routeName,
+                                  arguments: disease);
                             },
+                            child: DiseaseItem(
+                              disease: disease,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        HeaderText(
+                          text: "Doctors nearby you",
+                          textTheme: textTheme,
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "See All",
+                            style: textTheme.bodyMedium!.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
-                        );
-                      })),
-                ),
-              ]),
-        ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: SizeConfig.screenHeight * 0.2334,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: context.read<HomeCubit>().doctors.length,
+                        itemBuilder: (context, index) {
+                          final doctor =
+                              context.read<HomeCubit>().doctors[index];
+                          return Padding(
+                            padding: EdgeInsets.only(
+                                right: getProportionateScreenWidth(12)),
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(
+                                    context, DoctorDetailsPage.routeName,
+                                    arguments: doctor);
+                              },
+                              child: DoctorCard(doctor: doctor),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 }
 
 class DoctorCard extends StatelessWidget {
+  final DoctorModel doctor;
+
   const DoctorCard({
     super.key,
+    required this.doctor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(getProportionateScreenWidth(12)),
-        child: Column(
-          children: [
-            SizedBox(
-              height: getProportionateScreenHeight(5),
-            ),
-            const CircleAvatar(
-              radius: 28,
-              backgroundImage: AssetImage("assets/images/doctor.png"),
-            ),
-            SizedBox(
-              height: getProportionateScreenHeight(5),
-            ),
-            const Text(
-              "Dr. Alina James",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
+    return SizedBox(
+      width: getProportionateScreenWidth(130),
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: EdgeInsets.all(getProportionateScreenWidth(12)),
+          child: Column(
+            children: [
+              SizedBox(
+                height: getProportionateScreenHeight(5),
               ),
-            ),
-            const Expanded(
-              child: Text(
-                "B.Sc, MBBS, DDVL,\n MD- Dermitologist",
-                style: TextStyle(color: Colors.grey, fontSize: 10),
+              CircleAvatar(
+                radius: 28,
+                backgroundImage: doctor.profilePicture.isNotEmpty
+                    ? Image.memory(
+                        const Base64Decoder().convert(doctor.profilePicture),
+                        fit: BoxFit.cover,
+                      ).image
+                    : const AssetImage("assets/images/avatar.png"),
               ),
-            ),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(
-                  Icons.star,
-                  color: Color(0xffEFCE4A),
+              SizedBox(
+                height: getProportionateScreenHeight(5),
+              ),
+              Text(
+                "${doctor.firstName} ${doctor.lastName}",
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
                 ),
-                Text(
-                  '4.2',
-                  style: TextStyle(color: Colors.grey),
-                )
-              ],
-            )
-          ],
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              Expanded(
+                child: Text(
+                  doctor.specialization,
+                  style: const TextStyle(color: Colors.grey, fontSize: 10),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.star,
+                    color: Color(0xffEFCE4A),
+                  ),
+                  Text(
+                    '${doctor.rating}',
+                    style: const TextStyle(color: Colors.grey),
+                  )
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -275,17 +328,26 @@ class DoctorCard extends StatelessWidget {
 class DiseaseItem extends StatelessWidget {
   const DiseaseItem({
     super.key,
+    required this.disease,
   });
+
+  final DiseaseModel disease;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(right: getProportionateScreenWidth(8)),
       child: Card(
-        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(getProportionateScreenWidth(14)),
+        ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(getProportionateScreenWidth(8)),
-          child: Image.asset('assets/images/new.png'),
+          borderRadius: BorderRadius.circular(getProportionateScreenWidth(14)),
+          child: Image.memory(
+            const Base64Decoder().convert(disease.image),
+            fit: BoxFit.cover,
+            width: getProportionateScreenWidth(100),
+          ),
         ),
       ),
     );
@@ -315,15 +377,17 @@ class CarouselSliderCard extends StatelessWidget {
         return SizedBox(
           width: double.infinity,
           child: Card(
-            elevation: 4,
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: getProportionateScreenHeight(16),
-                left: getProportionateScreenWidth(20),
-              ),
+            margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
               child: Image.memory(
                 const Base64Decoder().convert(banner.imageUrl),
                 fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               ),
             ),
           ),
@@ -342,11 +406,17 @@ class PopularArticleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double cardWidth = getProportionateScreenWidth(118);
+    final double margin = getProportionateScreenWidth(10);
+    final double borderRadius = getProportionateScreenWidth(10);
+
     return Container(
-      width: getProportionateScreenWidth(118),
-      margin: EdgeInsets.only(right: getProportionateScreenWidth(10)),
+      width: cardWidth.isNaN || cardWidth.isInfinite ? 0 : cardWidth,
+      margin: EdgeInsets.only(
+          right: margin.isNaN || margin.isInfinite ? 0 : margin),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(getProportionateScreenWidth(10)),
+        borderRadius: BorderRadius.circular(
+            borderRadius.isNaN || borderRadius.isInfinite ? 0 : borderRadius),
         color: AppColors.primary,
       ),
       child: Center(

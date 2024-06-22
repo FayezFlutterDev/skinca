@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:skinca/core/constants/app_defaults.dart';
 import 'package:skinca/core/constants/icon_borken.dart';
+import 'package:skinca/core/models/disease_model.dart';
 import '../../core/constants/app_colors.dart';
 
 class DiseaseDetailsPage extends StatelessWidget {
@@ -9,9 +12,12 @@ class DiseaseDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final DiseaseModel disease =
+        ModalRoute.of(context)!.settings.arguments as DiseaseModel;
     final textTheme = Theme.of(context)
         .textTheme
         .apply(displayColor: Theme.of(context).colorScheme.onSurface);
+    
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -54,7 +60,7 @@ class DiseaseDetailsPage extends StatelessWidget {
                 right: 60,
                 child: Center(
                   child: Text(
-                    "Skin Cancer",
+                    disease.title,
                     style: textTheme.titleLarge!.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -98,9 +104,21 @@ class DiseaseDetailsPage extends StatelessWidget {
                       children: [
                         SizedBox(
                             width: double.infinity,
-                            child: Image.asset("assets/images/new.png")),
+                            child: disease.image.isNotEmpty
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.memory(
+                                      const Base64Decoder()
+                                          .convert(disease.image),
+                                      fit: BoxFit.cover,
+                                      width: 80,
+                                      height: 80,
+                                    ),
+                                  )
+                                : Image.asset("assets/images/new.png")),
+                        const SizedBox(height: 16),
                         Text(
-                          "Description",
+                          "Specialty",
                           style: textTheme.titleMedium!.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.primary,
@@ -108,7 +126,7 @@ class DiseaseDetailsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "Skin cancer is the uncontrolled growth of abnormal skin cells. It occurs when unrepaired DNA damage to skin cells (most often caused by ultraviolet radiation from sunshine or tanning beds) triggers mutations, or genetic defects, that lead the skin cells to multiply rapidly and form malignant tumors.",
+                          disease.specialty,
                           style: textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 16),
@@ -120,10 +138,49 @@ class DiseaseDetailsPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          "Skin cancer symptoms can include many different shapes, sizes, and colors of skin lesions, or moles. The most common sign of skin cancer is a change on the skin, such as a growth or a sore that won't heal.",
+                        ...disease.symptoms.map((symptom) => Text(
+                          symptom,
                           style: textTheme.bodyMedium,
+                        )),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Types",
+                          style: textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
                         ),
+                        const SizedBox(height: 8),
+                        ...disease.types.map((type) => Text(
+                          type,
+                          style: textTheme.bodyMedium,
+                        )),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Causes",
+                          style: textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...disease.causes.map((cause) => Text(
+                          cause,
+                          style: textTheme.bodyMedium,
+                        )),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Diagnostic Methods",
+                          style: textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...disease.diagnosticMethods.map((method) => Text(
+                          method,
+                          style: textTheme.bodyMedium,
+                        )),
                         const SizedBox(height: 16),
                         Text(
                           "Prevention",
@@ -133,10 +190,10 @@ class DiseaseDetailsPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          "To reduce your risk of skin cancer, protect your skin from the sun and avoid indoor tanning. Here are some tips to help protect your skin from the sun's harmful UV radiation and reduce your risk of skin cancer.",
+                        ...disease.prevention.map((prevention) => Text(
+                          prevention,
                           style: textTheme.bodyMedium,
-                        ),
+                        )),
                       ],
                     ),
                   ),

@@ -5,6 +5,8 @@ class EndPoint {
   static String register = 'account/register';
   static String forgotPassword = 'account/forgot-password';
   static String bannners = 'banners';
+  static String diseases = 'Diseases';
+  static String doctors = 'Doctors';
 }
 
 class ApiKey {

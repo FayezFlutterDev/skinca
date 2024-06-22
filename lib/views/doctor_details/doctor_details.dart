@@ -1,17 +1,24 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:skinca/core/constants/constants.dart';
 import 'package:skinca/core/constants/icon_borken.dart';
+import 'package:skinca/core/models/doctor_model.dart';
 
 class DoctorDetailsPage extends StatelessWidget {
   static const String routeName = "/doctor_details";
 
   const DoctorDetailsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final DoctorModel doctor =
+        ModalRoute.of(context)!.settings.arguments as DoctorModel;
     final textTheme = Theme.of(context)
         .textTheme
         .apply(displayColor: Theme.of(context).colorScheme.onSurface);
+
     return Scaffold(
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -97,23 +104,24 @@ class DoctorDetailsPage extends StatelessWidget {
                                             width: getProportionateScreenHeight(
                                                 4)),
                                         Text(
-                                          "4.5",
+                                          doctor.rating.toString(),
                                           style: textTheme.bodyLarge!.copyWith(
                                             color: AppColors.primary,
                                           ),
                                         ),
                                       ],
-                                    )
+                                    ),
                                   ],
                                 ),
                                 SizedBox(
                                     height: getProportionateScreenHeight(10)),
-                                Text("Dr. Abdullah Fayez",
+                                Text(
+                                    "Dr.${doctor.firstName} ${doctor.lastName}",
                                     style: textTheme.titleLarge!.copyWith(
                                       fontWeight: FontWeight.w500,
                                     )),
                                 Text(
-                                  "B.Sc, MBBS, DDVL, MD- Dermitologist",
+                                  doctor.specialization,
                                   style: textTheme.bodySmall!.copyWith(
                                     color: AppColors.grey,
                                   ),
@@ -123,7 +131,7 @@ class DoctorDetailsPage extends StatelessWidget {
                                 Row(
                                   children: [
                                     Text(
-                                      "16",
+                                      "${doctor.experience}",
                                       style: textTheme.bodyLarge,
                                     ),
                                     Text(
@@ -134,11 +142,11 @@ class DoctorDetailsPage extends StatelessWidget {
                                     ),
                                     const Spacer(),
                                     Text(
-                                      "89%",
+                                      "89%", // Replace with actual votes percentage if available
                                       style: textTheme.bodyLarge,
                                     ),
                                     Text(
-                                      "(4432 votes)",
+                                      "(4432 votes)", // Replace with actual votes count if available
                                       style: textTheme.bodySmall!.copyWith(
                                         color: AppColors.grey,
                                       ),
@@ -155,13 +163,14 @@ class DoctorDetailsPage extends StatelessWidget {
                                               width:
                                                   getProportionateScreenWidth(
                                                       4)),
-                                      itemCount: 4,
+                                      itemCount: doctor.services.length,
                                       scrollDirection: Axis.horizontal,
                                       itemBuilder: (context, index) {
-                                        return Image.asset(
-                                            "assets/images/mask.png");
+                                        return Chip(
+                                          label: Text(doctor.services[index]),
+                                        );
                                       }),
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -172,12 +181,21 @@ class DoctorDetailsPage extends StatelessWidget {
                             radius: 44,
                             backgroundColor: Colors.white,
                             child: ClipOval(
-                                child: Image.asset(
-                              "assets/images/user.jpg",
-                              fit: BoxFit.cover,
-                              width: 80,
-                              height: 80,
-                            )),
+                              child: doctor.profilePicture.isNotEmpty
+                                  ? Image.memory(
+                                      const Base64Decoder()
+                                          .convert(doctor.profilePicture),
+                                      fit: BoxFit.cover,
+                                      width: 80,
+                                      height: 80,
+                                    )
+                                  : Image.asset(
+                                      'assets/images/avatar.png',
+                                      fit: BoxFit.cover,
+                                      width: 80,
+                                      height: 80,
+                                    ),
+                            ),
                           ),
                         ),
                       ],
@@ -215,33 +233,37 @@ class DoctorDetailsPage extends StatelessWidget {
                               color: AppColors.grey,
                             ),
                           ),
-                          Text("\$10", style: textTheme.bodySmall)
+                          Text("\$${doctor.clinicFees}",
+                              style: textTheme.bodySmall),
                         ],
                       ),
                       SizedBox(height: getProportionateScreenHeight(5)),
-                      const Divider(
-                        thickness: 0.9,
-                      ),
+                      const Divider(thickness: 0.9),
                       SizedBox(height: getProportionateScreenHeight(5)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("CLOSED TODAY",
-                              style: textTheme.labelSmall!.copyWith(
-                                color: Colors.red,
-                              )),
-                          Text(" - 10:00 AM - 06:00 PM",
-                              style: textTheme.labelSmall),
-                          Text("All TIMINGS",
-                              style: textTheme.labelSmall!.copyWith(
-                                color: AppColors.primary,
-                              )),
+                          Text(
+                            doctor.isWorking ? "OPEN TODAY" : "CLOSED TODAY",
+                            style: textTheme.labelSmall!.copyWith(
+                              color:
+                                  doctor.isWorking ? Colors.green : Colors.red,
+                            ),
+                          ),
+                          Text(
+                            " - ",
+                            style: textTheme.labelSmall,
+                          ),
+                          Text(
+                            "All TIMINGS",
+                            style: textTheme.labelSmall!.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: getProportionateScreenHeight(5)),
-                      const Divider(
-                        thickness: 0.9,
-                      ),
+                      const Divider(thickness: 0.9),
                       SizedBox(height: getProportionateScreenHeight(5)),
                       Row(
                         children: [
@@ -249,8 +271,9 @@ class DoctorDetailsPage extends StatelessWidget {
                               color: AppColors.primary),
                           Expanded(
                             child: Text(
-                                " 123, 4th Floor, 5th Main, 6th Cross, 7th Sector, 8th Phase, 9th Block, 10th City, 11th State, 12th Country, 13th Pincode",
-                                style: textTheme.labelSmall),
+                              doctor.address,
+                              style: textTheme.labelSmall,
+                            ),
                           ),
                         ],
                       ),
@@ -261,14 +284,15 @@ class DoctorDetailsPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           child: GoogleMap(
                             mapType: MapType.normal,
-                            initialCameraPosition: const CameraPosition(
-                              target: LatLng(29.076361, 31.097000),
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(doctor.latitude, doctor.longitude),
                               zoom: 14.4746,
                             ),
                             markers: {
-                              const Marker(
-                                markerId: MarkerId("1"),
-                                position: LatLng(29.076361, 31.097000),
+                              Marker(
+                                markerId: MarkerId(doctor.userId),
+                                position:
+                                    LatLng(doctor.latitude, doctor.longitude),
                               ),
                             },
                           ),
@@ -278,7 +302,7 @@ class DoctorDetailsPage extends StatelessWidget {
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
