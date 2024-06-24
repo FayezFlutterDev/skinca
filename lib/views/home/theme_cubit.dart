@@ -19,6 +19,7 @@ class ThemeState {
 }
 
 class ThemeCubit extends Cubit<ThemeState> {
+  bool isDarkMode = false;
   ThemeCubit()
       : super(ThemeState(
           themeMode: ThemeMode.light,
@@ -26,6 +27,7 @@ class ThemeCubit extends Cubit<ThemeState> {
         ));
 
   void changeThemeMode(bool useLightMode) {
+    isDarkMode = !useLightMode;
     emit(state.copyWith(
       themeMode: useLightMode ? ThemeMode.light : ThemeMode.dark,
     ));

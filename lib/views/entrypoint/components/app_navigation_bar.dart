@@ -23,9 +23,7 @@ class AppBottomNavigationBar extends StatelessWidget {
       case 2:
         return currentIndex == 2 ? Icons.face : Icons.face_retouching_off;
       case 3:
-        return currentIndex == 3
-            ? Icons.notifications
-            : IconBroken.Notification;
+        return currentIndex == 3 ? Icons.message : IconBroken.Chat;
       case 4:
         return currentIndex == 4 ? Icons.person : IconBroken.Profile;
       default:

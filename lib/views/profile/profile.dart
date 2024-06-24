@@ -8,6 +8,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:skinca/core/constants/app_defaults.dart';
 import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
 import 'package:skinca/views/auth/auth_cubit/user_state.dart';
+import 'package:skinca/views/auth/forget_password/create_new_password.dart';
+import 'package:skinca/views/home/components/color_button.dart';
+import 'package:skinca/views/home/components/theme_button.dart';
+import 'package:skinca/views/home/theme_cubit.dart';
+import 'package:skinca/views/profile/screens/contact_us.dart';
+import 'package:skinca/views/profile/screens/diseases.dart';
+import 'package:skinca/views/profile/screens/doctors.dart';
+import 'package:skinca/views/profile/screens/help_page.dart';
 
 class ProfilePage extends StatefulWidget {
   static const String routeName = '/profile';
@@ -18,25 +26,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  List<Map<String, dynamic>> items = [
-    {
-      'text': 'Language',
-      'icon': Icons.language,
-      'onTap': () => print('Language tapped')
-    },
-    {
-      'text': 'Change Password',
-      'icon': Icons.lock,
-      'onTap': () => print('Change Password tapped')
-    },
-    {'text': 'Help', 'icon': Icons.help, 'onTap': () => print('Help tapped')},
-    {
-      'text': 'Contact Us',
-      'icon': Icons.contact_phone,
-      'onTap': () => print('Contact Us tapped')
-    },
-  ];
-
   bool isExpanded = false;
 
   @override
@@ -127,7 +116,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               SizedBox(height: getProportionateScreenHeight(5)),
                               if (context.read<UserCubit>().user != null)
                                 Text(
-                                  context.read<UserCubit>().user?.name ??context.read<UserCubit>().registerResponse!.name ,
+                                  context.read<UserCubit>().user?.name ??
+                                      context
+                                          .read<UserCubit>()
+                                          .registerResponse!
+                                          .name,
                                   style: textTheme.bodyLarge!
                                       .copyWith(fontWeight: FontWeight.bold),
                                 )
@@ -195,18 +188,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               icon: Icons.person,
                               nextPage: '/profile-info',
                             ),
-                            ExpansionTileItem(
-                              textTheme: textTheme,
-                              text: 'Medical Record',
-                              icon: Icons.medical_services,
-                              nextPage: '/edit_information',
-                            ),
-                            ExpansionTileItem(
-                              textTheme: textTheme,
-                              text: 'Alarm Medication',
-                              icon: Icons.alarm,
-                              nextPage: '/edit_information',
-                            ),
                             ExpansionTile(
                               onExpansionChanged: (v) {
                                 setState(() {
@@ -249,24 +230,78 @@ class _ProfilePageState extends State<ProfilePage> {
                                   child: Container(
                                     margin: const EdgeInsets.symmetric(
                                         horizontal: 15),
-                                    child: Column(
-                                      children:
-                                          List.generate(items.length, (index) {
-                                        return ListTile(
-                                          leading: Icon(
-                                            items[index]['icon'],
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                          ),
-                                          title: Text(
-                                            items[index]['text'],
-                                            style: const TextStyle(),
-                                          ),
-                                          onTap: items[index]['onTap'],
-                                        );
-                                      }),
-                                    ),
+                                    child: Column(children: [
+                                      ListTile(
+                                        title: Text(
+                                          'Language',
+                                          style: textTheme.titleMedium,
+                                        ),
+                                        leading: const Icon(Icons.language),
+                                        onTap: () => print('Language tapped'),
+                                      ),
+                                      ListTile(
+                                        title: Text(
+                                          'Change Password',
+                                          style: textTheme.titleMedium,
+                                        ),
+                                        leading: const Icon(Icons.lock),
+                                        onTap: () => Navigator.of(context)
+                                            .pushNamed(
+                                                CreateNewPassword.routeName),
+                                      ),
+                                      ListTile(
+                                        title: Text(
+                                          'Help',
+                                          style: textTheme.titleMedium,
+                                        ),
+                                        leading: const Icon(Icons.help),
+                                        onTap: () => Navigator.of(context)
+                                            .pushNamed(HelpPage.routeName),
+                                      ),
+                                      BlocBuilder<ThemeCubit, ThemeState>(
+                                        builder: (context, state) {
+                                          return ListTile(
+                                            title: context
+                                                    .read<ThemeCubit>()
+                                                    .isDarkMode
+                                                ? const Text("Light Mode")
+                                                : const Text("Dark Mode"),
+                                            leading: context
+                                                    .read<ThemeCubit>()
+                                                    .isDarkMode
+                                                ? const Icon(Icons.light_mode)
+                                                : const Icon(Icons.dark_mode),
+                                            trailing: ThemeButton(
+                                              changeThemeMode:
+                                                  (bool useLightMode) {
+                                                context
+                                                    .read<ThemeCubit>()
+                                                    .changeThemeMode(
+                                                        useLightMode);
+                                              },
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      BlocBuilder<ThemeCubit, ThemeState>(
+                                        builder: (context, state) {
+                                          return ListTile(
+                                            title: const Text("Color"),
+                                            leading:
+                                                const Icon(Icons.color_lens),
+                                            trailing: ColorButton(
+                                              changeColor: (int value) {
+                                                context
+                                                    .read<ThemeCubit>()
+                                                    .changeColor(value);
+                                              },
+                                              colorSelected:
+                                                  state.colorSelected,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ]),
                                   ),
                                 ),
                               ],
@@ -275,13 +310,19 @@ class _ProfilePageState extends State<ProfilePage> {
                               textTheme: textTheme,
                               text: 'Contact Us',
                               icon: Icons.contact_phone,
-                              nextPage: '/edit_information',
+                              nextPage: ContactUsPage.routeName,
                             ),
                             ExpansionTileItem(
                               textTheme: textTheme,
                               text: 'Doctors',
                               icon: Icons.people,
-                              nextPage: '/edit_information',
+                              nextPage: DoctorsPage.routeName,
+                            ),
+                            ExpansionTileItem(
+                              textTheme: textTheme,
+                              text: 'Disease',
+                              icon: Icons.local_hospital_rounded,
+                              nextPage: DiseasesPage.routeName,
                             ),
                             ExpansionTileItem(
                               textTheme: textTheme,
@@ -293,7 +334,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               textTheme: textTheme,
                               text: 'Log Out',
                               icon: Icons.logout,
-                              nextPage: '/edit_information',
+                              nextPage: '/onboarding',
                             ),
                           ],
                         ),
@@ -353,5 +394,3 @@ class ExpansionTileItem extends StatelessWidget {
     );
   }
 }
-
-// ignore: must_be_immutable

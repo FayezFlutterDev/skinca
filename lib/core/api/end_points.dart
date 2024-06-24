@@ -7,6 +7,8 @@ class EndPoint {
   static String bannners = 'banners';
   static String diseases = 'Diseases';
   static String doctors = 'Doctors';
+  static String search = 'Search';
+  static String profile = 'account/profile';
 }
 
 class ApiKey {

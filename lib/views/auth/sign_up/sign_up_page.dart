@@ -22,7 +22,6 @@ class SignUpPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<UserCubit, UserState>(
       listener: (context, state) {
-        
         if (state is SignUpSuccess &&
             context.read<UserCubit>().registerResponse?.isAuthenticated ==
                 true) {
@@ -67,10 +66,10 @@ class SignUpPage extends StatelessWidget {
       },
       builder: (context, state) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(
             centerTitle: true,
             backgroundColor: Colors.white,
-            elevation: 0,
             leading: IconButton(
               icon: const Icon(
                 IconBroken.Arrow___Left_2,
@@ -85,221 +84,218 @@ class SignUpPage extends StatelessWidget {
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
           ),
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDefaults.padding),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Form(
-                  key: context.read<UserCubit>().registerFormKey,
-                  child: Column(
-                    children: [
-                      context.read<UserCubit>().profilePic == null
-                          ? Stack(children: [
-                              CircleAvatar(
-                                radius: getProportionateScreenWidth(35),
-                                backgroundImage: const AssetImage(
-                                    "assets/images/avatar.png"),
-                              ),
-                              Positioned(
-                                  bottom: 5,
-                                  right: 5,
-                                  child: Container(
-                                    height: 25,
-                                    width: 25,
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.shade400,
-                                      border: Border.all(
-                                          color: Colors.white, width: 3),
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        ImagePicker()
-                                            .pickImage(
-                                                source: ImageSource.gallery)
-                                            .then((value) {
-                                          if (value != null) {
-                                            context
-                                                .read<UserCubit>()
-                                                .uploadProfilePic(value);
-                                          }
-                                        });
-                                      },
-                                      child: CircleAvatar(
-                                        backgroundColor: Theme.of(context)
-                                            .colorScheme
-                                            .surface,
-                                        radius: 5,
-                                        child: const Icon(
-                                          Icons.camera_alt_sharp,
-                                          size: 15,
-                                        ),
+          body: Padding(
+            padding: const EdgeInsets.all(AppDefaults.padding),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Form(
+                key: context.read<UserCubit>().registerFormKey,
+                child: Column(
+                  children: [
+                    context.read<UserCubit>().profilePic == null
+                        ? Stack(children: [
+                            CircleAvatar(
+                              radius: getProportionateScreenWidth(35),
+                              backgroundImage:
+                                  const AssetImage("assets/images/avatar.png"),
+                            ),
+                            Positioned(
+                                bottom: 5,
+                                right: 5,
+                                child: Container(
+                                  height: 25,
+                                  width: 25,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade400,
+                                    border: Border.all(
+                                        color: Colors.white, width: 3),
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      ImagePicker()
+                                          .pickImage(
+                                              source: ImageSource.gallery)
+                                          .then((value) {
+                                        if (value != null) {
+                                          context
+                                              .read<UserCubit>()
+                                              .uploadProfilePic(value);
+                                        }
+                                      });
+                                    },
+                                    child: CircleAvatar(
+                                      backgroundColor:
+                                          Theme.of(context).colorScheme.surface,
+                                      radius: 5,
+                                      child: const Icon(
+                                        Icons.camera_alt_sharp,
+                                        size: 15,
                                       ),
                                     ),
-                                  ))
-                            ])
-                          : CircleAvatar(
-                              radius: getProportionateScreenWidth(35),
-                              backgroundImage: FileImage(File(
-                                  context.read<UserCubit>().profilePic!.path)),
-                            ),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      buildFNameTextFormField(context),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      buildLNameTextFormField(context),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      buildEmailTextFormField(context),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      buildAddressTextFormField(context),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      buildPhoneTextFormField(context),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      buildPasswordTextFormField(context),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      DropdownButtonFormField<String>(
-                        onChanged: (String? newValue) {},
-                        items: <String>["Yes", "No"]
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(
-                            IconBroken.Work,
-                            size: 28,
-                            color: AppColors.primary,
+                                  ),
+                                ))
+                          ])
+                        : CircleAvatar(
+                            radius: getProportionateScreenWidth(35),
+                            backgroundImage: FileImage(File(
+                                context.read<UserCubit>().profilePic!.path)),
                           ),
-                          fillColor: const Color(0xFFF9FAFC),
-                          filled: true,
-                          enabledBorder: outlineInputBorder(),
-                          focusedBorder: outlineInputBorder(),
-                          border: outlineInputBorder(),
-                          hintText: "Are you a doctor?",
-                          hintStyle: const TextStyle(
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    buildFNameTextFormField(context),
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    buildLNameTextFormField(context),
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    buildEmailTextFormField(context),
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    buildAddressTextFormField(context),
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    buildPhoneTextFormField(context),
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    buildPasswordTextFormField(context),
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    DropdownButtonFormField<String>(
+                      onChanged: (String? newValue) {},
+                      items: <String>["Yes", "No"]
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(
+                          IconBroken.Work,
+                          size: 28,
+                          color: AppColors.primary,
+                        ),
+                        fillColor: const Color(0xFFF9FAFC),
+                        filled: true,
+                        enabledBorder: outlineInputBorder(),
+                        focusedBorder: outlineInputBorder(),
+                        border: outlineInputBorder(),
+                        hintText: "Are you a doctor?",
+                        hintStyle: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400),
+                      ),
+                    ),
+                    SizedBox(height: SizeConfig.screenHeight * 0.01),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: context.read<UserCubit>().registerAgree,
+                          activeColor: AppColors.primary,
+                          onChanged: (value) {
+                            context
+                                .read<UserCubit>()
+                                .toggleRegisterAgree(value!);
+                          },
+                        ),
+                        SizedBox(width: getProportionateScreenWidth(8)),
+                        Expanded(
+                          child: RichText(
+                              text: TextSpan(
+                            text: 'I agree to the ',
+                            style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 16,
-                              fontWeight: FontWeight.w400),
-                        ),
-                      ),
-                      SizedBox(height: SizeConfig.screenHeight * 0.01),
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: context.read<UserCubit>().registerAgree,
-                            activeColor: AppColors.primary,
-                            onChanged: (value) {
-                              context
-                                  .read<UserCubit>()
-                                  .toggleRegisterAgree(value!);
-                            },
-                          ),
-                          SizedBox(width: getProportionateScreenWidth(8)),
-                          Expanded(
-                            child: RichText(
-                                text: TextSpan(
-                              text: 'I agree to the ',
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            children: [
+                              WidgetSpan(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                        isScrollControlled: true,
+                                        context: context,
+                                        builder: (context) {
+                                          return const Privacy();
+                                        });
+                                  },
+                                  child: const Text(
+                                    'Terms of Service',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              children: [
-                                WidgetSpan(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      showModalBottomSheet(
-                                          isScrollControlled: true,
-                                          context: context,
-                                          builder: (context) {
-                                            return const Privacy();
-                                          });
-                                    },
-                                    child: const Text(
-                                      'Terms of Service',
-                                      style: TextStyle(
-                                        color: AppColors.primary,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400,
-                                      ),
+                              const TextSpan(
+                                text: ' and ',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              WidgetSpan(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    KeyboardUtil.hideKeyboard(context);
+                                    showModalBottomSheet(
+                                        isScrollControlled: true,
+                                        context: context,
+                                        builder: (context) {
+                                          return const Privacy();
+                                        });
+                                  },
+                                  child: const Text(
+                                    'Privacy Policy',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                 ),
-                                const TextSpan(
-                                  text: ' and ',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                                WidgetSpan(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      KeyboardUtil.hideKeyboard(context);
-                                      showModalBottomSheet(
-                                          isScrollControlled: true,
-                                          context: context,
-                                          builder: (context) {
-                                            return const Privacy();
-                                          });
-                                    },
-                                    child: const Text(
-                                      'Privacy Policy',
-                                      style: TextStyle(
-                                        color: AppColors.primary,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: SizeConfig.screenHeight * 0.02),
-                      (state is SignUpLoading)
-                          ? const CircularProgressIndicator()
-                          : DefaultButton(
-                              text: 'Sign Up',
-                              press: () {
-                                if (context
-                                    .read<UserCubit>()
-                                    .registerFormKey
-                                    .currentState!
-                                    .validate()) {
-                                  context.read<UserCubit>().signUp();
-                                }
-                              },
-                            ),
-                      SizedBox(height: SizeConfig.screenHeight * 0.02),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Already have an account?",
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(context, LoginPage.routeName);
+                              ),
+                            ],
+                          )),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: SizeConfig.screenHeight * 0.02),
+                    (state is SignUpLoading)
+                        ? const CircularProgressIndicator()
+                        : DefaultButton(
+                            text: 'Sign Up',
+                            press: () {
+                              if (context
+                                  .read<UserCubit>()
+                                  .registerFormKey
+                                  .currentState!
+                                  .validate()) {
+                                context.read<UserCubit>().signUp();
+                              }
                             },
-                            child: const Text(
-                              " Login",
-                              style: TextStyle(
-                                  fontSize: 18, color: AppColors.primary),
-                            ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    SizedBox(height: SizeConfig.screenHeight * 0.02),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Already have an account?",
+                          style: TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, LoginPage.routeName);
+                          },
+                          child: const Text(
+                            " Login",
+                            style: TextStyle(
+                                fontSize: 18, color: AppColors.primary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -12,11 +12,9 @@ import 'package:skinca/views/disease_details/disease_details.dart';
 import 'package:skinca/views/doctor_details/doctor_details.dart';
 import 'package:skinca/views/home/home_cubit/home_cubit.dart';
 import 'package:skinca/views/home/home_cubit/home_states.dart';
+import 'package:skinca/views/profile/screens/diseases.dart';
+import 'package:skinca/views/profile/screens/doctors.dart';
 import 'package:skinca/views/profile/screens/profile_info.dart';
-
-import 'components/color_button.dart';
-import 'components/theme_button.dart';
-import 'theme_cubit.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({
@@ -89,25 +87,10 @@ class HomePage extends StatelessWidget {
               ],
             ),
             actions: [
-              BlocBuilder<ThemeCubit, ThemeState>(
-                builder: (context, state) {
-                  return ThemeButton(
-                    changeThemeMode: (bool useLightMode) {
-                      context.read<ThemeCubit>().changeThemeMode(useLightMode);
-                    },
-                  );
-                },
-              ),
-              BlocBuilder<ThemeCubit, ThemeState>(
-                builder: (context, state) {
-                  return ColorButton(
-                    changeColor: (int value) {
-                      context.read<ThemeCubit>().changeColor(value);
-                    },
-                    colorSelected: state.colorSelected,
-                  );
-                },
-              ),
+              Image.asset(
+                "assets/images/logoo_dark.png",
+                fit: BoxFit.cover,
+              )
             ],
           ),
         ),
@@ -173,7 +156,10 @@ class HomePage extends StatelessWidget {
                         ),
                         const Spacer(),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushNamed(
+                                context, DiseasesPage.routeName);
+                          },
                           child: Text(
                             "Show All",
                             style: textTheme.bodyMedium!.copyWith(
@@ -212,7 +198,9 @@ class HomePage extends StatelessWidget {
                         ),
                         const Spacer(),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushNamed(context, DoctorsPage.routeName);
+                          },
                           child: Text(
                             "See All",
                             style: textTheme.bodyMedium!.copyWith(
@@ -304,7 +292,7 @@ class DoctorCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ),
-               Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(

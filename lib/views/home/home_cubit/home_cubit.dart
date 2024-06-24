@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/api/api_consumer.dart';
 import 'package:skinca/core/api/end_points.dart';
@@ -9,6 +10,7 @@ import 'package:skinca/core/errors/exceptions.dart';
 import 'package:skinca/core/models/banner_model.dart';
 import 'package:skinca/core/models/disease_model.dart';
 import 'package:skinca/core/models/doctor_model.dart';
+import 'package:skinca/core/models/profile_model.dart';
 import 'package:skinca/views/home/home_cubit/home_states.dart';
 
 class HomeCubit extends Cubit<HomeState> {
@@ -19,6 +21,20 @@ class HomeCubit extends Cubit<HomeState> {
   List<BannerModel> banners = [];
   List<DiseaseModel> diseases = [];
   List<DoctorModel> doctors = [];
+  GlobalKey<FormState> searchKey = GlobalKey<FormState>();
+  final TextEditingController searchController = TextEditingController();
+
+  Profile profile = Profile(
+    email: '',
+    firstName: '',
+    lastName: '',
+    birthDate: DateTime.now(),
+    address: '',
+    phoneNumber: '',
+    latitude: 0.0,
+    longitude: 0.0,
+    profilePicture: '',
+  );
 
   Future<void> getBanners() async {
     try {
@@ -135,10 +151,10 @@ class HomeCubit extends Cubit<HomeState> {
       print('Unexpected error: $e');
     }
   }
- 
+
   Future<void> getDoctors() async {
     try {
-      print("start getDoctors");
+      // print("start getDoctors");
       emit(DoctorsLoading());
 
       final dynamic response = await api.get(EndPoint.doctors);
@@ -173,7 +189,8 @@ class HomeCubit extends Cubit<HomeState> {
                 return null;
               }
             })
-            .whereType<DoctorModel>() // Filter out null values and cast to DoctorModel
+            .whereType<
+                DoctorModel>() // Filter out null values and cast to DoctorModel
             .toList();
         emit(DoctorsSuccess());
       } else {
@@ -188,4 +205,171 @@ class HomeCubit extends Cubit<HomeState> {
       print('Unexpected error: $e');
     }
   }
+
+  Future<void> search(String query) async {
+    try {
+      emit(SearchLoading());
+      print("Starting search with query: $query");
+
+      final dynamic response =
+          await api.get('${EndPoint.search}/$query');
+      print('Response data: $response');
+
+      dynamic decodedResponse;
+      if (response is String) {
+        print("Response is a string");
+        decodedResponse = jsonDecode(response);
+      } else {
+        print('Response is not a string');
+        decodedResponse = response;
+      }
+
+      print('Decoded Response: $decodedResponse');
+      print('Decoded Response Type: ${decodedResponse.runtimeType}');
+
+      if (decodedResponse == null) {
+        emit(SearchFailure('No response received from the server.'));
+        return;
+      }
+
+      if (decodedResponse is Map<String, dynamic> &&
+          decodedResponse.containsKey('statusCode') &&
+          decodedResponse['statusCode'] == 401) {
+        emit(SearchFailure('Unauthorized: Token expired or invalid'));
+        return;
+      }
+
+      if (decodedResponse is Map<String, dynamic> &&
+          decodedResponse.containsKey('diseases') &&
+          decodedResponse['diseases'] is List &&
+          decodedResponse.containsKey('doctors') &&
+          decodedResponse['doctors'] is List) {
+        final List<dynamic>? diseasesList = decodedResponse['diseases'];
+        final List<dynamic>? doctorsList = decodedResponse['doctors'];
+
+        if (diseasesList == null || doctorsList == null) {
+          emit(SearchFailure('Diseases or doctors list is null.'));
+          return;
+        }
+
+        // Parse diseases from the response
+        final List<DiseaseModel> diseases = diseasesList
+            .map((e) => DiseaseModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+
+        // Parse doctors from the response
+        final List<DoctorModel> doctors = doctorsList
+            .map((e) => DoctorModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+
+        emit(SearchSuccess(diseases, doctors));
+      } else {
+        print('Invalid response format: $decodedResponse');
+        emit(SearchFailure('Invalid response format from the server.'));
+      }
+    } on ServerException catch (e) {
+      emit(SearchFailure(e.errorModel.message));
+    } catch (e) {
+      emit(SearchFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
+    }
+  }
+
+  Future<void> getProfile() async {
+    try {
+      emit(ProfileLoading());
+
+      final dynamic response = await api.get(EndPoint.profile);
+      print(response);
+
+      dynamic decodedResponse;
+
+      if (response is String) {
+        decodedResponse = jsonDecode(response);
+      } else {
+        decodedResponse = response;
+      }
+
+      if (decodedResponse != null && decodedResponse is Map<String, dynamic>) {
+        if (decodedResponse.containsKey('profile')) {
+          profile = Profile.fromJson(decodedResponse['profile']);
+          print(profile);
+          emit(ProfileSuccess(profile));
+        } else {
+          emit(ProfileFailure('Profile data is missing.'));
+        }
+      } else {
+        emit(ProfileFailure('Invalid response format from the server.'));
+      }
+    } on ServerException catch (e) {
+      emit(ProfileFailure(e.errorModel.message));
+    } catch (e) {
+      emit(ProfileFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
+    }
+  }
+
+  Future<void> updateProfile(ProfileUpdateModel newProfile) async {
+  try {
+    emit(ProfileLoading());
+
+    final dynamic response = await api.put(
+      EndPoint.profile,
+      data: {
+        ApiKey.email: newProfile.email,
+        ApiKey.fName: newProfile.firstName,
+        ApiKey.lName: newProfile.lastName,
+        ApiKey.phoneNumber: newProfile.phoneNumber,
+        // Add other necessary fields here
+      },
+      isFormData: true,
+    );
+
+    print("Response from update profile: $response");
+
+    dynamic decodedResponse;
+    if (response is String) {
+      try {
+        print("Response is a string. Attempting to decode...");
+        decodedResponse = jsonDecode(response);
+        print('Decoded Response: $decodedResponse');
+      } catch (e) {
+        print("Failed to decode string response: $e");
+        emit(ProfileFailure('Failed to decode string response.'));
+        return;
+      }
+    } else if (response is Map<String, dynamic>) {
+      print('Response is already a Map');
+      decodedResponse = response;
+    } else {
+      print('Unexpected response type: ${response.runtimeType}');
+      emit(ProfileFailure('Unexpected response type from the server.'));
+      return;
+    }
+
+    if (decodedResponse == null) {
+      emit(ProfileFailure('No response received from the server.'));
+      return;
+    }
+
+    if (decodedResponse.containsKey('status') && decodedResponse['status'] == true) {
+      if (decodedResponse.containsKey('profile')) {
+        final profileData = decodedResponse['profile'];
+        final updatedProfile = Profile.fromJson(profileData);
+        emit(ProfileSuccess(updatedProfile));
+      } else {
+        emit(ProfileFailure('Profile data is missing in the response.'));
+      }
+    } else {
+      final errorMessage = decodedResponse['message'] ?? 'Unknown error';
+      emit(ProfileFailure(errorMessage));
+    }
+  } on ServerException catch (e) {
+    emit(ProfileFailure(e.errorModel.message));
+  } catch (e) {
+    emit(ProfileFailure('Unexpected error: $e'));
+    print('Unexpected error: $e');
+  }
 }
+
+ }

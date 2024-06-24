@@ -1,9 +1,19 @@
+// ignore_for_file: unnecessary_null_comparison
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/constants/constants.dart';
 import 'package:skinca/core/constants/icon_borken.dart';
+import 'package:skinca/core/models/disease_model.dart';
+import 'package:skinca/core/models/doctor_model.dart';
 import 'package:skinca/core/utils/keyboard.dart';
-import 'package:skinca/views/chat/chat_page.dart';
+import 'package:skinca/views/disease_details/disease_details.dart';
+import 'package:skinca/views/doctor_details/doctor_details.dart';
 import 'package:skinca/views/entrypoint/entrypoint_ui.dart';
+import 'package:skinca/views/home/home_cubit/home_cubit.dart';
+import 'package:skinca/views/home/home_cubit/home_states.dart'; // Import your HomeCubit
 
 class SearchPage extends StatefulWidget {
   static const String routeName = "/search_page";
@@ -15,6 +25,8 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   bool isFilter = false;
+  String query = "";
+  String selectedSegment = 'All';
 
   @override
   Widget build(BuildContext context) {
@@ -43,25 +55,53 @@ class _SearchPageState extends State<SearchPage> {
                           isFilter = !isFilter;
                         });
                       },
+                      onSearch: (value) {
+                        setState(() {
+                          query = value;
+                        });
+                        context.read<HomeCubit>().search(value);
+                      },
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              if (isFilter) const SearchFilter(),
-              const DoctorCard(
-                name: "Dr. Marcus Horizon",
-                specialty: "Cardiologist",
-                startTime: "10:00 AM",
-                endTime: "5:00 PM",
-                imageUrl: "https://via.placeholder.com/150",
-              ),
-              const DoctorCard(
-                name: "Dr. Alysa Hana",
-                specialty: "Psychiatrist",
-                startTime: "9:00 AM",
-                endTime: "3:00 PM",
-                imageUrl: "https://via.placeholder.com/150",
+              if (isFilter)
+                SearchFilter(
+                  onSegmentSelected: (String segment) {
+                    setState(() {
+                      selectedSegment = segment;
+                    });
+                  },
+                ),
+              BlocBuilder<HomeCubit, HomeState>(
+                builder: (context, state) {
+                  if (state is SearchLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is SearchSuccess) {
+                    final filteredDoctors =
+                        selectedSegment == 'All' || selectedSegment == 'Doctor'
+                            ? state.doctors
+                            : [];
+                    final filteredDiseases =
+                        selectedSegment == 'All' || selectedSegment == 'Disease'
+                            ? state.diseases
+                            : [];
+
+                    return Column(
+                      children: [
+                        for (var doctor in filteredDoctors)
+                          DoctorCard(doctor: doctor),
+                        for (var disease in filteredDiseases)
+                          SearchDiseaseCard(disease: disease),
+                      ],
+                    );
+                  } else if (state is SearchFailure) {
+                    return Center(child: Text(state.error));
+                  } else {
+                    return const Center(child: Text('No results found.'));
+                  }
+                },
               ),
             ],
           ),
@@ -71,55 +111,42 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
-class SearchFilter extends StatefulWidget {
-  const SearchFilter({super.key});
+class SearchDiseaseCard extends StatelessWidget {
+  const SearchDiseaseCard({
+    super.key,
+    required this.disease,
+  });
 
-  @override
-  // ignore: library_private_types_in_public_api
-  _SearchFilterState createState() => _SearchFilterState();
-}
-
-class _SearchFilterState extends State<SearchFilter> {
-  String _selectedSegment = 'All';
+  final DiseaseModel disease;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppDefaults.padding),
-        child: SegmentedButton<String>(
-          segments: const [
-            ButtonSegment(value: 'All', label: Text('All')),
-            ButtonSegment(value: 'Disease', label: Text('Disease')),
-            ButtonSegment(value: 'Doctor', label: Text('Doctor')),
-          ],
-          selected: <String>{_selectedSegment},
-          onSelectionChanged: (Set<String> newSelection) {
-            setState(() {
-              _selectedSegment = newSelection.first;
-            });
-          },
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-                (Set<MaterialState> states) {
-              if (states.contains(MaterialState.selected)) {
-                return Colors.teal; // Color for the selected segment
-              }
-              return Colors.white; // Color for the unselected segments
-            }),
-            foregroundColor: MaterialStateProperty.resolveWith<Color?>(
-                (Set<MaterialState> states) {
-              if (states.contains(MaterialState.selected)) {
-                return Colors.white; // Text color for the selected segment
-              }
-              return Colors.black; // Text color for the unselected segments
-            }),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                side: const BorderSide(color: Colors.grey),
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(context, DiseaseDetailsPage.routeName,
+              arguments: disease);
+        },
+        child: Card(
+          child: ListTile(
+            title: Text(
+              disease.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              disease.specialty,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            leading: CircleAvatar(
+              backgroundImage: disease.image == null
+                  ? const AssetImage('assets/images/new2.png')
+                  : Image.memory(const Base64Decoder().convert(
+                      disease.image.split(',').last,
+                    )).image,
+              radius: 30.0,
             ),
           ),
         ),
@@ -131,10 +158,12 @@ class _SearchFilterState extends State<SearchFilter> {
 class _SearchPageHeader extends StatelessWidget {
   final bool isFilter;
   final VoidCallback onFilterToggle;
+  final Function(String) onSearch;
 
   const _SearchPageHeader({
     required this.isFilter,
     required this.onFilterToggle,
+    required this.onSearch,
   });
 
   @override
@@ -146,7 +175,6 @@ class _SearchPageHeader extends StatelessWidget {
           Expanded(
             child: Stack(
               children: [
-                /// Search Box
                 Form(
                   child: TextFormField(
                     decoration: const InputDecoration(
@@ -166,10 +194,10 @@ class _SearchPageHeader extends StatelessWidget {
                       constraints: BoxConstraints(),
                     ),
                     textInputAction: TextInputAction.search,
-                    //autofocus: true,
-                    onChanged: (String? value) {},
+                    onChanged: onSearch,
                     onFieldSubmitted: (v) {
                       KeyboardUtil.hideKeyboard(context);
+                      onSearch(v);
                     },
                   ),
                 ),
@@ -205,20 +233,72 @@ class _SearchPageHeader extends StatelessWidget {
   }
 }
 
+class SearchFilter extends StatefulWidget {
+  final Function(String) onSegmentSelected;
+
+  const SearchFilter({super.key, required this.onSegmentSelected});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _SearchFilterState createState() => _SearchFilterState();
+}
+
+class _SearchFilterState extends State<SearchFilter> {
+  String _selectedSegment = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppDefaults.padding),
+        child: SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(value: 'All', label: Text('All')),
+            ButtonSegment(value: 'Disease', label: Text('Disease')),
+            ButtonSegment(value: 'Doctor', label: Text('Doctor')),
+          ],
+          selected: <String>{_selectedSegment},
+          onSelectionChanged: (Set<String> newSelection) {
+            setState(() {
+              _selectedSegment = newSelection.first;
+            });
+            widget.onSegmentSelected(_selectedSegment);
+          },
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                (Set<MaterialState> states) {
+              if (states.contains(MaterialState.selected)) {
+                return Colors.teal;
+              }
+              return Colors.white;
+            }),
+            foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                (Set<MaterialState> states) {
+              if (states.contains(MaterialState.selected)) {
+                return Colors.white;
+              }
+              return Colors.black;
+            }),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                side: const BorderSide(color: Colors.grey),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class DoctorCard extends StatelessWidget {
-  final String name;
-  final String specialty;
-  final String startTime;
-  final String endTime;
-  final String imageUrl;
+  final DoctorModel doctor;
 
   const DoctorCard({
     super.key,
-    required this.name,
-    required this.specialty,
-    required this.startTime,
-    required this.endTime,
-    required this.imageUrl,
+    required this.doctor,
   });
 
   @override
@@ -234,23 +314,29 @@ class DoctorCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const CircleAvatar(
-                    backgroundImage: AssetImage("assets/images/user.jpg"),
+                  CircleAvatar(
+                    backgroundImage: doctor.profilePicture.isNotEmpty
+                        ? Image.memory(const Base64Decoder().convert(
+                            doctor.profilePicture.split(',').last,
+                          )).image
+                        : const AssetImage('assets/images/avatar.png'),
                     radius: 30.0,
                   ),
-                  const SizedBox(width: 16.0),
+                  const SizedBox(width: 10.0),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name,
+                        "${doctor.firstName}${doctor.lastName}",
                         style: const TextStyle(
                           fontSize: 18.0,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        specialty,
+                        doctor.specialization,
                         style: TextStyle(
                           fontSize: 14.0,
                           color: Colors.grey[600],
@@ -266,14 +352,14 @@ class DoctorCard extends StatelessWidget {
                   Icon(Icons.access_time, size: 16.0, color: Colors.grey[600]),
                   const SizedBox(width: 4.0),
                   Text(
-                    startTime,
+                    "5:00 PM",
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                   const SizedBox(width: 16.0),
                   Icon(Icons.access_time, size: 16.0, color: Colors.grey[600]),
                   const SizedBox(width: 4.0),
                   Text(
-                    endTime,
+                    "6:00 PM",
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ],
@@ -284,7 +370,9 @@ class DoctorCard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, ChatPage.routeName);
+                        Navigator.pushNamed(
+                            context, DoctorDetailsPage.routeName,
+                            arguments: doctor);
                       },
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
@@ -299,7 +387,9 @@ class DoctorCard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Handle see details button press
+                        Navigator.pushNamed(
+                            context, DoctorDetailsPage.routeName,
+                            arguments: doctor);
                       },
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(

@@ -11,6 +11,10 @@ import 'package:skinca/views/home/home.dart';
 import 'package:skinca/views/notification/notification_page.dart';
 import 'package:skinca/views/onboarding/onboarding_page.dart';
 import 'package:skinca/views/profile/profile.dart';
+import 'package:skinca/views/profile/screens/contact_us.dart';
+import 'package:skinca/views/profile/screens/diseases.dart';
+import 'package:skinca/views/profile/screens/doctors.dart';
+import 'package:skinca/views/profile/screens/help_page.dart';
 import 'package:skinca/views/profile/screens/profile_info.dart';
 import 'package:skinca/views/search/search_page.dart';
 import '../../views/auth/forget_password/create_new_password.dart';
@@ -31,4 +35,8 @@ final Map<String, WidgetBuilder> routes = {
   DoctorDetailsPage.routeName: (context) => const DoctorDetailsPage(),
   DiseaseDetailsPage.routeName: (context) => const DiseaseDetailsPage(),
   ProfileInfoPage.routeName: (context) => const ProfileInfoPage(),
+  HelpPage.routeName: (context) => const HelpPage(),
+  ContactUsPage.routeName: (context) => const ContactUsPage(),
+  DoctorsPage.routeName : (context) => const DoctorsPage(),
+  DiseasesPage.routeName : (context) => const DiseasesPage(),
 };
