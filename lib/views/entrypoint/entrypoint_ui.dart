@@ -1,10 +1,15 @@
+import 'dart:math';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:skinca/core/components/verified_dialog.dart';
 import 'package:skinca/core/constants/icon_borken.dart';
 import 'package:skinca/views/chat/messages_page.dart';
 import 'package:skinca/views/home/home.dart';
+import 'package:skinca/views/home/home_cubit/home_cubit.dart';
+import 'package:skinca/views/home/home_cubit/home_states.dart';
 import 'package:skinca/views/profile/profile.dart';
 import 'package:skinca/views/search/search_page.dart';
 
@@ -53,19 +58,48 @@ class _EntryPointUIState extends State<EntryPointUI> {
         duration: AppDefaults.duration,
         child: IndexedStack(index: currentIndex, children: pages),
       ),
-      floatingActionButton: FloatingActionButton(
-          heroTag: 'chatbotFAB',
-          onPressed: () {
-            ImagePicker()
-                .pickImage(source: ImageSource.camera)
-                .then((value) {});
-          },
-          backgroundColor: AppColors.primary,
-          child: const Icon(
-            IconBroken.Scan,
-            color: Colors.white,
-            size: 43,
-          )),
+      floatingActionButton: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          return FloatingActionButton(
+              heroTag: 'chatbotFAB',
+              onPressed: () {
+                ImagePicker()
+                    .pickImage(source: ImageSource.camera)
+                    .then((value) {
+                  if (value != null) {
+                    context.read<HomeCubit>().uploadScanPic(value);
+                  }
+                });
+                if (state is ScanSuccess && state.status == true) {
+                  showGeneralDialog(
+                    barrierLabel: 'Dialog',
+                    barrierDismissible: true,
+                    context: context,
+                    pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+                      text: 'Scan Result',
+                      text2: state.prediction,
+                      text3: 'Ok',
+                      onPressed: () {
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, EntryPointUI.routeName, (route) => false);
+                      },
+                    ),
+                    transitionBuilder: (ctx, anim1, anim2, child) =>
+                        ScaleTransition(
+                      scale: anim1,
+                      child: child,
+                    ),
+                  );
+                }
+              },
+              backgroundColor: AppColors.primary,
+              child: const Icon(
+                IconBroken.Scan,
+                color: Colors.white,
+                size: 43,
+              ));
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, state) {

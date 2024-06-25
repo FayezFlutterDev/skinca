@@ -4,14 +4,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:skinca/core/api/api_consumer.dart';
 import 'package:skinca/core/api/end_points.dart';
 import 'package:skinca/core/errors/exceptions.dart';
+import 'package:skinca/core/functions/upload_image_toapi.dart';
 import 'package:skinca/core/models/banner_model.dart';
 import 'package:skinca/core/models/create_chat_model.dart';
 import 'package:skinca/core/models/disease_model.dart';
 import 'package:skinca/core/models/doctor_model.dart';
 import 'package:skinca/core/models/profile_model.dart';
+import 'package:skinca/core/models/scan_model.dart';
 import 'package:skinca/views/home/home_cubit/home_states.dart';
 
 class HomeCubit extends Cubit<HomeState> {
@@ -24,6 +27,12 @@ class HomeCubit extends Cubit<HomeState> {
   List<DoctorModel> doctors = [];
   GlobalKey<FormState> searchKey = GlobalKey<FormState>();
   final TextEditingController searchController = TextEditingController();
+  XFile? scanPic;
+   uploadScanPic(XFile image) async {
+    scanPic = image;
+    emit(PickImageLoading());
+  }
+
 
   Profile profile = Profile(
     email: '',
@@ -460,4 +469,54 @@ class HomeCubit extends Cubit<HomeState> {
       print('Unexpected error: $e');
     }
   }
+  
+  Future<void> scan() async {
+  try {
+    emit(ScanLoading());
+
+    // Send POST request to the scan endpoint
+    final response = await api.post(
+      EndPoint.scan,
+      data: {
+        ApiKey.profilePicture: await uploadImageToAPI(scanPic!),
+      },
+      isFormData: true,
+    );
+
+    // Log the response data for debugging
+    print(response);
+
+    // Parse the response data
+    dynamic decodedResponse;
+
+    if (response is String) {
+      decodedResponse = jsonDecode(response);
+    } else {
+      decodedResponse = response;
+    }
+
+    // Check if the response data is a Map
+    if (decodedResponse != null && decodedResponse is Map<String, dynamic>) {
+      // Create the ScanResponse from the parsed JSON
+      final scanResponse = ScanResponse.fromJson(decodedResponse);
+
+      // Log the scan details for debugging
+      print('ScanResponse: $scanResponse');
+
+      if (scanResponse.status) {
+        emit(ScanSuccess(scanResponse.prediction, scanResponse.status));
+      } else {
+        emit(ScanFailure('Scan failed.'));
+      }
+    } else {
+      emit(ScanFailure('Invalid response format from the server.'));
+    }
+  } on ServerException catch (e) {
+    emit(ScanFailure(e.errorModel.message));
+  } catch (e) {
+    emit(ScanFailure('Unexpected error: $e'));
+    print('Unexpected error: $e');
+  }
+}
+
 }

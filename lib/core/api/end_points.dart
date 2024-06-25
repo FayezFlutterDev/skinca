@@ -11,6 +11,7 @@ class EndPoint {
   static String profile = 'account/profile';
   static String logout = 'account/delete-account';
   static String createChat = 'chats/'; 
+  static String scan = "scan";
 }
 
 class ApiKey {

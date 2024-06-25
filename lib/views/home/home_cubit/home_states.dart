@@ -78,3 +78,19 @@ class CreateChatFailure extends HomeState {
   final String error;
   CreateChatFailure(this.error);
 }
+class PickImageLoading extends HomeState {}
+
+class ScanLoading extends HomeState {}
+
+class ScanSuccess extends HomeState {
+  final String prediction;
+  final bool status;
+
+  ScanSuccess(this.prediction, this.status);
+}
+
+class ScanFailure extends HomeState {
+  final String error;
+
+  ScanFailure(this.error);
+}
