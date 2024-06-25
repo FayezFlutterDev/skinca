@@ -9,6 +9,7 @@ class EndPoint {
   static String doctors = 'Doctors';
   static String search = 'Search';
   static String profile = 'account/profile';
+  static String logout = 'account/delete-account'; 
 }
 
 class ApiKey {

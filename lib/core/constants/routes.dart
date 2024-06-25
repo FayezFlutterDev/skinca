@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skinca/views/auth/forget_password/forget_password.dart';
 import 'package:skinca/views/auth/forget_password/verification_code.dart';
-import 'package:skinca/views/auth/login_page.dart';
+import 'package:skinca/views/auth/login/login_page.dart';
 import 'package:skinca/views/auth/sign_up/sign_up_page.dart';
 import 'package:skinca/views/chat/chat_page.dart';
 import 'package:skinca/views/disease_details/disease_details.dart';

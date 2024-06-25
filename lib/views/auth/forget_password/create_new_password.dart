@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skinca/core/constants/app_colors.dart';
-import 'package:skinca/views/auth/login_page.dart';
+import 'package:skinca/views/auth/login/login_page.dart';
 
 import '../../../core/components/default_button.dart';
 import '../../../core/constants/app_defaults.dart';

@@ -12,6 +12,7 @@ import 'package:skinca/views/auth/forget_password/create_new_password.dart';
 import 'package:skinca/views/home/components/color_button.dart';
 import 'package:skinca/views/home/components/theme_button.dart';
 import 'package:skinca/views/home/theme_cubit.dart';
+import 'package:skinca/views/onboarding/onboarding_page.dart';
 import 'package:skinca/views/profile/screens/contact_us.dart';
 import 'package:skinca/views/profile/screens/diseases.dart';
 import 'package:skinca/views/profile/screens/doctors.dart';
@@ -326,15 +327,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             ExpansionTileItem(
                               textTheme: textTheme,
-                              text: 'Bookmarks',
-                              icon: Icons.bookmark,
-                              nextPage: '/edit_information',
-                            ),
-                            ExpansionTileItem(
-                              textTheme: textTheme,
                               text: 'Log Out',
                               icon: Icons.logout,
-                              nextPage: '/onboarding',
+                              nextPage: OnboardingPage.routeName,
                             ),
                           ],
                         ),

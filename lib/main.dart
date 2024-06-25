@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/constants/routes.dart';
 import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
+import 'package:skinca/views/entrypoint/entrypoint_ui.dart';
 import 'package:skinca/views/home/home_cubit/home_cubit.dart';
 import 'package:skinca/views/home/theme_cubit.dart';
 
 import 'core/api/dio_consumer.dart';
-
 
 Future<void> main() async {
   runZonedGuarded(() async {
@@ -25,7 +25,10 @@ Future<void> main() async {
             create: (context) => UserCubit(DioConsumer(dio: Dio())),
           ),
           BlocProvider(
-            create: (context) => HomeCubit(DioConsumer(dio: Dio()))..getBanners()..getDiseases()..getDoctors(),
+            create: (context) => HomeCubit(DioConsumer(dio: Dio()))
+              ..getBanners()
+              ..getDiseases()
+              ..getDoctors(),
           ),
         ],
         child: const MyApp(),
@@ -63,7 +66,7 @@ class _MyAppState extends State<MyApp> {
           debugShowCheckedModeBanner: false,
           title: 'SkinCa',
           routes: routes,
-          initialRoute: "/onboarding",
+          initialRoute: "/${EntryPointUI.routeName}",
           themeMode: state.themeMode,
           theme: ThemeData(
             colorSchemeSeed: state.colorSelected.color,

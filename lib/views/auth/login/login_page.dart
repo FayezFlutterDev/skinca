@@ -9,10 +9,10 @@ import 'package:skinca/views/auth/forget_password/forget_password.dart';
 import 'package:skinca/views/auth/sign_up/sign_up_page.dart';
 import 'package:skinca/views/entrypoint/entrypoint_ui.dart';
 
-import '../../core/components/divider.dart';
-import '../../core/components/social_card.dart';
-import '../../core/constants/app_defaults.dart';
-import '../../core/constants/icon_borken.dart';
+import '../../../core/components/divider.dart';
+import '../../../core/components/social_card.dart';
+import '../../../core/constants/app_defaults.dart';
+import '../../../core/constants/icon_borken.dart';
 
 class LoginPage extends StatelessWidget {
   static const String routeName = '/login';

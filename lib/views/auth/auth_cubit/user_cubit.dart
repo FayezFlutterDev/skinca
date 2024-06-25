@@ -159,7 +159,7 @@ class UserCubit extends Cubit<UserState> {
       );
 
       // Log the response data for debugging
-      
+
       // Check if the response data is a Map
       if (response is Map<String, dynamic>) {
         // Now create the RegisterResponse from the parsed JSON
@@ -182,13 +182,12 @@ class UserCubit extends Cubit<UserState> {
             emit(SignUpFailure('Token is missing in the response.'));
           }
         } else {
-          emit(SignUpFailure(registerResponse?.message ?? 'Authentication failed.'));
+          emit(SignUpFailure(
+              registerResponse?.message ?? 'Authentication failed.'));
         }
       } else {
         emit(SignUpFailure('Invalid response format from the server.'));
       }
-
-      
     } on ServerException catch (e) {
       emit(SignUpFailure(e.errorModel.message));
     } catch (e) {
@@ -198,10 +197,33 @@ class UserCubit extends Cubit<UserState> {
   }
 
   Future<void> signOut() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.remove('token');
-    prefs.remove('id');
-    emit(UserInitial());
+    try {
+      emit(SignOutLoading());
+
+      // Assuming api.delete is a method that performs a DELETE request to the API
+      final response = await api.delete(
+        EndPoint.logout,
+      );
+
+      // Log the response data for debugging
+      print('Response data: $response');
+
+      // Check if the response is successful
+      if (response.statusCode == 200) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove('token');
+        await prefs.remove('id');
+
+        emit(SignOutSuccess('Account successfully deleted.'));
+      } else {
+        emit(SignOutFailure('Failed to delete account. Please try again.'));
+      }
+    } on ServerException catch (e) {
+      emit(SignOutFailure(e.errorModel.message));
+    } catch (e) {
+      emit(SignOutFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
+    }
   }
 
   Future<void> forgotPassword() async {

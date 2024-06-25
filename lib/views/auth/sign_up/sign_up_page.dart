@@ -7,7 +7,7 @@ import 'package:skinca/core/components/verified_dialog.dart';
 import 'package:skinca/core/utils/keyboard.dart';
 import 'package:skinca/views/auth/auth_cubit/user_cubit.dart';
 import 'package:skinca/views/auth/auth_cubit/user_state.dart';
-import 'package:skinca/views/auth/login_page.dart';
+import 'package:skinca/views/auth/login/login_page.dart';
 
 import '../../../core/components/default_button.dart';
 import '../../../core/constants/constants.dart';
@@ -274,27 +274,7 @@ class SignUpPage extends StatelessWidget {
                             },
                           ),
                     SizedBox(height: SizeConfig.screenHeight * 0.02),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Already have an account?",
-                          style: TextStyle(
-                            fontSize: 18,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, LoginPage.routeName);
-                          },
-                          child: const Text(
-                            " Login",
-                            style: TextStyle(
-                                fontSize: 18, color: AppColors.primary),
-                          ),
-                        ),
-                      ],
-                    ),
+                    const HaveAccount(),
                   ],
                 ),
               ),
@@ -541,6 +521,37 @@ class SignUpPage extends StatelessWidget {
                 ),
         ),
       ),
+    );
+  }
+}
+
+class HaveAccount extends StatelessWidget {
+  const HaveAccount({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          "Already have an account?",
+          style: TextStyle(
+            fontSize: 18,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, LoginPage.routeName);
+          },
+          child: const Text(
+            " Login",
+            style: TextStyle(
+                fontSize: 18, color: AppColors.primary),
+          ),
+        ),
+      ],
     );
   }
 }

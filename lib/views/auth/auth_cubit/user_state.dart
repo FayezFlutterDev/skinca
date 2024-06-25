@@ -80,4 +80,20 @@ class SignUpFailure extends UserState {
   SignUpFailure(this.message);
 }
 
+class SignOutLoading extends UserState {}
+
+class SignOutSuccess extends UserState {
+  final String message;
+
+  SignOutSuccess(this.message);
+}
+
+class SignOutFailure extends UserState {
+  final String message;
+
+  SignOutFailure(this.message);
+}
+
+
+
 

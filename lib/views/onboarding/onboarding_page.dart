@@ -1,5 +1,5 @@
   import 'package:flutter/material.dart';
-import 'package:skinca/views/auth/login_page.dart';
+import 'package:skinca/views/auth/login/login_page.dart';
 import 'package:svg_flutter/svg.dart';
 
 import '../../core/constants/constants.dart';
