@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -54,66 +55,62 @@ class _ProfilePageState extends State<ProfilePage> {
                       ? FittedBox(
                           child: Column(
                             children: [
-                              Stack(children: [
-                                CircleAvatar(
-                                  radius: getProportionateScreenWidth(45),
-                                  backgroundImage: context
-                                              .read<UserCubit>()
-                                              .user
-                                              ?.picture !=
-                                          null
-                                      ? Image.memory(
-                                          const Base64Decoder().convert(context
-                                              .read<UserCubit>()
-                                              .user!
-                                              .picture!),
-                                          fit: BoxFit.cover,
-                                        ).image
-                                      : context
-                                                  .read<UserCubit>()
-                                                  .registerResponse
-                                                  ?.picture !=
-                                              null
-                                          ? Image.memory(
-                                              const Base64Decoder().convert(
+                              context.read<UserCubit>().profilePic == null
+                                  ? Stack(children: [
+                                      CircleAvatar(
+                                          radius:
+                                              getProportionateScreenWidth(45),
+                                          backgroundImage: context
+                                                      .read<UserCubit>()
+                                                      .user
+                                                      ?.picture !=
+                                                  null
+                                              ? Image.memory(
+                                                  const Base64Decoder().convert(
+                                                      context
+                                                          .read<UserCubit>()
+                                                          .user!
+                                                          .picture!),
+                                                  fit: BoxFit.cover,
+                                                ).image
+                                              : const AssetImage(
+                                                  "assets/images/avatar.png")),
+                                      Positioned(
+                                          bottom: 10,
+                                          right: 2,
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              ImagePicker()
+                                                  .pickImage(
+                                                      source:
+                                                          ImageSource.gallery)
+                                                  .then((value) {
+                                                if (value != null) {
                                                   context
                                                       .read<UserCubit>()
-                                                      .registerResponse!
-                                                      .picture!),
-                                              fit: BoxFit.cover,
-                                            ).image
-                                          : const AssetImage(
-                                                  "assets/images/avatar.png")
-                                              as ImageProvider,
-                                ),
-                                Positioned(
-                                    bottom: 10,
-                                    right: 2,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        ImagePicker()
-                                            .pickImage(
-                                                source: ImageSource.gallery)
-                                            .then((value) {
-                                          if (value != null) {
-                                            context
-                                                .read<UserCubit>()
-                                                .uploadProfilePic(value);
-                                          }
-                                        });
-                                      },
-                                      child: CircleAvatar(
-                                        backgroundColor: Theme.of(context)
-                                            .colorScheme
-                                            .surface,
-                                        radius: 10,
-                                        child: const Icon(
-                                          Icons.camera_alt,
-                                          size: 15,
-                                        ),
-                                      ),
-                                    ))
-                              ]),
+                                                      .uploadProfilePic(value);
+                                                }
+                                              });
+                                            },
+                                            child: CircleAvatar(
+                                              backgroundColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .surface,
+                                              radius: 10,
+                                              child: const Icon(
+                                                Icons.camera_alt,
+                                                size: 15,
+                                              ),
+                                            ),
+                                          ))
+                                    ])
+                                  : CircleAvatar(
+                                      radius: getProportionateScreenWidth(35),
+                                      backgroundImage: FileImage(File(context
+                                          .read<UserCubit>()
+                                          .profilePic!
+                                          .path)),
+                                    ),
                               SizedBox(height: getProportionateScreenHeight(5)),
                               if (context.read<UserCubit>().user != null)
                                 Text(

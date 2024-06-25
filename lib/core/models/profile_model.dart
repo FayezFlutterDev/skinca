@@ -2,7 +2,7 @@ class Profile {
   final String email;
   final String firstName;
   final String lastName;
-  final DateTime birthDate;
+  final DateTime? birthDate;
   final String address;
   final String phoneNumber;
   final double? latitude;
@@ -16,19 +16,19 @@ class Profile {
     required this.birthDate,
     required this.address,
     required this.phoneNumber,
-    this.latitude,
-    this.longitude,
-    this.profilePicture,
+    required this.latitude,
+    required this.longitude,
+    required this.profilePicture,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
-      email: json['email'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      birthDate: DateTime.parse(json['birthDate']),
-      address: json['address'],
-      phoneNumber: json['phoneNumber'],
+      email: json['email'] ?? '',
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      birthDate: json['birthDate'] != null ? DateTime.parse(json['birthDate']) : null,
+      address: json['address'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
       latitude: json['latitude']?.toDouble(),
       longitude: json['longitude']?.toDouble(),
       profilePicture: json['profilePicture'],
@@ -42,9 +42,9 @@ class ProfileUpdateModel {
   final String lastName;
   final String address;
   final String phoneNumber;
-  final double latitude;
-  final double longitude;
-  final String profilePicture;
+  final double? latitude;
+  final double? longitude;
+  final String? profilePicture;
 
   ProfileUpdateModel({
     required this.email,
@@ -70,4 +70,3 @@ class ProfileUpdateModel {
     };
   }
 }
-
