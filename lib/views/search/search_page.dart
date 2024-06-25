@@ -9,6 +9,7 @@ import 'package:skinca/core/constants/icon_borken.dart';
 import 'package:skinca/core/models/disease_model.dart';
 import 'package:skinca/core/models/doctor_model.dart';
 import 'package:skinca/core/utils/keyboard.dart';
+import 'package:skinca/views/chat/chat_page.dart';
 import 'package:skinca/views/disease_details/disease_details.dart';
 import 'package:skinca/views/doctor_details/doctor_details.dart';
 import 'package:skinca/views/entrypoint/entrypoint_ui.dart';
@@ -45,6 +46,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     onPressed: () {
                       Navigator.pushNamed(context, EntryPointUI.routeName);
+                      KeyboardUtil.hideKeyboard(context);
                     },
                   ),
                   Expanded(
@@ -370,9 +372,9 @@ class DoctorCard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamed(
-                            context, DoctorDetailsPage.routeName,
+                        Navigator.pushNamed(context, ChatPage.routeName,
                             arguments: doctor);
+                        context.read<HomeCubit>().createChat(doctor.userId);
                       },
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(

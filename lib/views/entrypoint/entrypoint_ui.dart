@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skinca/core/constants/icon_borken.dart';
-import 'package:skinca/views/chat/chat_page.dart';
+import 'package:skinca/views/chat/messages_page.dart';
 import 'package:skinca/views/home/home.dart';
 import 'package:skinca/views/profile/profile.dart';
 import 'package:skinca/views/search/search_page.dart';
@@ -31,8 +31,8 @@ class _EntryPointUIState extends State<EntryPointUI> {
   List<Widget> pages = [
     const HomePage(),
     const SearchPage(),
-    ChatPage(),
-    ChatPage(),
+    const SearchPage(),
+    const MessagePage(),
     const ProfilePage(),
   ];
 

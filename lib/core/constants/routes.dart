@@ -4,6 +4,7 @@ import 'package:skinca/views/auth/forget_password/verification_code.dart';
 import 'package:skinca/views/auth/login/login_page.dart';
 import 'package:skinca/views/auth/sign_up/sign_up_page.dart';
 import 'package:skinca/views/chat/chat_page.dart';
+import 'package:skinca/views/chat/messages_page.dart';
 import 'package:skinca/views/disease_details/disease_details.dart';
 import 'package:skinca/views/doctor_details/doctor_details.dart';
 import 'package:skinca/views/entrypoint/entrypoint_ui.dart';
@@ -22,7 +23,7 @@ import '../../views/auth/forget_password/create_new_password.dart';
 final Map<String, WidgetBuilder> routes = {
   EntryPointUI.routeName: (context) => const EntryPointUI(),
   SearchPage.routeName: (context) => const SearchPage(),
-  ChatPage.routeName: (context) => ChatPage(),
+  ChatPage.routeName: (context) => const ChatPage(),
   NotificationPage.routeName: (context) => const NotificationPage(),
   ProfilePage.routeName: (context) => const ProfilePage(),
   LoginPage.routeName: (context) => const LoginPage(),
@@ -39,4 +40,5 @@ final Map<String, WidgetBuilder> routes = {
   ContactUsPage.routeName: (context) => const ContactUsPage(),
   DoctorsPage.routeName : (context) => const DoctorsPage(),
   DiseasesPage.routeName : (context) => const DiseasesPage(),
+  MessagePage.routeName: (context) => const MessagePage(),
 };

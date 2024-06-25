@@ -1,50 +1,27 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:skinca/core/components/app_back_button.dart';
+import 'package:skinca/core/models/doctor_model.dart';
 
 class ChatPage extends StatelessWidget {
   static const String routeName = '/chat';
-  final List<ChatMessage> messages = [
-    const ChatMessage(
-      sender: 'Dr. Marcus Horizon',
-      text: 'Hello, How can I help you?',
-      time: '10 min ago',
-      isDoctor: true,
-    ),
-    const ChatMessage(
-      sender: 'Abdullah',
-      text:
-          'I suffer from a large brown spot with another dark spot\nA mole that changes color',
-      time: '5 min ago',
-      isDoctor: false,
-    ),
-    const ChatMessage(
-      sender: 'Dr. Marcus Horizon',
-      text: 'Ok, can you send a picture of this mole you talked about?',
-      time: '5 min ago',
-      isDoctor: true,
-    ),
-    const ChatMessage(
-        sender: 'Abdullah',
-        text: '',
-        time: 'Just now',
-        isDoctor: false,
-        imageUrl: "assets/images/user.jpg"),
-  ];
 
-  ChatPage({super.key});
+  const ChatPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final DoctorModel doctor =
+        ModalRoute.of(context)!.settings.arguments as DoctorModel;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dr. Marcus Horizon'),
+        centerTitle: true,
+        title: Text('Dr. ${doctor.firstName} ${doctor.lastName}'),
         leading: const AppBackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // Handle more options
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -52,15 +29,14 @@ class ChatPage extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(8.0),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  return messages[index];
-                },
-              ),
+            ChatMessage(
+              sender: 'Dr. ${doctor.firstName} ${doctor.lastName}',
+              text: 'Hello, How can I help you?',
+              time: 'just now',
+              isDoctor: true,
+              doctor: doctor,
             ),
+            const Spacer(),
             _buildMessageInput(),
           ],
         ),
@@ -109,6 +85,7 @@ class ChatMessage extends StatelessWidget {
   final String time;
   final bool isDoctor;
   final String? imageUrl;
+  final DoctorModel doctor;
 
   const ChatMessage({
     super.key,
@@ -117,6 +94,7 @@ class ChatMessage extends StatelessWidget {
     required this.time,
     required this.isDoctor,
     this.imageUrl,
+    required this.doctor,
   });
 
   @override
@@ -127,8 +105,12 @@ class ChatMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isDoctor)
-            const CircleAvatar(
-              backgroundImage: AssetImage("assets/images/user.jpg"),
+            CircleAvatar(
+              backgroundImage: doctor.profilePicture.isNotEmpty
+                  ? Image.memory(const Base64Decoder().convert(
+                      doctor.profilePicture.split(',').last,
+                    )).image
+                  : const AssetImage('assets/images/avatar.png'),
               radius: 20.0,
             ),
           const SizedBox(width: 8.0),

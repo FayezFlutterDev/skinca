@@ -8,6 +8,7 @@ import 'package:skinca/core/api/api_consumer.dart';
 import 'package:skinca/core/api/end_points.dart';
 import 'package:skinca/core/errors/exceptions.dart';
 import 'package:skinca/core/models/banner_model.dart';
+import 'package:skinca/core/models/create_chat_model.dart';
 import 'package:skinca/core/models/disease_model.dart';
 import 'package:skinca/core/models/doctor_model.dart';
 import 'package:skinca/core/models/profile_model.dart';
@@ -211,8 +212,7 @@ class HomeCubit extends Cubit<HomeState> {
       emit(SearchLoading());
       print("Starting search with query: $query");
 
-      final dynamic response =
-          await api.get('${EndPoint.search}/$query');
+      final dynamic response = await api.get('${EndPoint.search}/$query');
       print('Response data: $response');
 
       dynamic decodedResponse;
@@ -310,66 +310,154 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> updateProfile(ProfileUpdateModel newProfile) async {
-  try {
-    emit(ProfileLoading());
+    try {
+      emit(ProfileLoading());
 
-    final dynamic response = await api.put(
-      EndPoint.profile,
-      data: {
-        ApiKey.email: newProfile.email,
-        ApiKey.fName: newProfile.firstName,
-        ApiKey.lName: newProfile.lastName,
-        ApiKey.phoneNumber: newProfile.phoneNumber,
-        // Add other necessary fields here
-      },
-      isFormData: true,
-    );
+      final dynamic response = await api.put(
+        EndPoint.profile,
+        data: {
+          ApiKey.email: newProfile.email,
+          ApiKey.fName: newProfile.firstName,
+          ApiKey.lName: newProfile.lastName,
+          ApiKey.phoneNumber: newProfile.phoneNumber,
+          // Add other necessary fields here
+        },
+        isFormData: true,
+      );
 
-    print("Response from update profile: $response");
+      print("Response from update profile: $response");
 
-    dynamic decodedResponse;
-    if (response is String) {
-      try {
-        print("Response is a string. Attempting to decode...");
-        decodedResponse = jsonDecode(response);
-        print('Decoded Response: $decodedResponse');
-      } catch (e) {
-        print("Failed to decode string response: $e");
-        emit(ProfileFailure('Failed to decode string response.'));
+      dynamic decodedResponse;
+      if (response is String) {
+        try {
+          print("Response is a string. Attempting to decode...");
+          decodedResponse = jsonDecode(response);
+          print('Decoded Response: $decodedResponse');
+        } catch (e) {
+          print("Failed to decode string response: $e");
+          emit(ProfileFailure('Failed to decode string response.'));
+          return;
+        }
+      } else if (response is Map<String, dynamic>) {
+        print('Response is already a Map');
+        decodedResponse = response;
+      } else {
+        print('Unexpected response type: ${response.runtimeType}');
+        emit(ProfileFailure('Unexpected response type from the server.'));
         return;
       }
-    } else if (response is Map<String, dynamic>) {
-      print('Response is already a Map');
-      decodedResponse = response;
-    } else {
-      print('Unexpected response type: ${response.runtimeType}');
-      emit(ProfileFailure('Unexpected response type from the server.'));
-      return;
-    }
 
-    if (decodedResponse == null) {
-      emit(ProfileFailure('No response received from the server.'));
-      return;
-    }
-
-    if (decodedResponse.containsKey('status') && decodedResponse['status'] == true) {
-      if (decodedResponse.containsKey('profile')) {
-        final profileData = decodedResponse['profile'];
-        final updatedProfile = Profile.fromJson(profileData);
-        emit(ProfileSuccess(updatedProfile));
-      } else {
-        emit(ProfileFailure('Profile data is missing in the response.'));
+      if (decodedResponse == null) {
+        emit(ProfileFailure('No response received from the server.'));
+        return;
       }
-    } else {
-      final errorMessage = decodedResponse['message'] ?? 'Unknown error';
-      emit(ProfileFailure(errorMessage));
+
+      if (decodedResponse.containsKey('status') &&
+          decodedResponse['status'] == true) {
+        if (decodedResponse.containsKey('profile')) {
+          final profileData = decodedResponse['profile'];
+          final updatedProfile = Profile.fromJson(profileData);
+          emit(ProfileSuccess(updatedProfile));
+        } else {
+          emit(ProfileFailure('Profile data is missing in the response.'));
+        }
+      } else {
+        final errorMessage = decodedResponse['message'] ?? 'Unknown error';
+        emit(ProfileFailure(errorMessage));
+      }
+    } on ServerException catch (e) {
+      emit(ProfileFailure(e.errorModel.message));
+    } catch (e) {
+      emit(ProfileFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
     }
-  } on ServerException catch (e) {
-    emit(ProfileFailure(e.errorModel.message));
-  } catch (e) {
-    emit(ProfileFailure('Unexpected error: $e'));
-    print('Unexpected error: $e');
+  }
+
+  Future<void> updateProfilePicture(String imagePath) async {
+    try {
+      emit(ProfileLoading());
+
+      final dynamic response = await api.put(
+        EndPoint.baseUrl,
+        data: {
+          ApiKey.profilePicture: imagePath,
+        },
+        isFormData: true,
+      );
+
+      print("Response from update profile picture: $response");
+
+      dynamic decodedResponse;
+      if (response is String) {
+        try {
+          print("Response is a string. Attempting to decode...");
+          decodedResponse = jsonDecode(response);
+          print('Decoded Response: $decodedResponse');
+        } catch (e) {
+          print("Failed to decode string response: $e");
+          emit(ProfileFailure('Failed to decode string response.'));
+          return;
+        }
+      } else if (response is Map<String, dynamic>) {
+        print('Response is already a Map');
+        decodedResponse = response;
+      } else {
+        print('Unexpected response type: ${response.runtimeType}');
+        emit(ProfileFailure('Unexpected response type from the server.'));
+        return;
+      }
+
+      if (decodedResponse == null) {
+        emit(ProfileFailure('No response received from the server.'));
+        return;
+      }
+
+      if (decodedResponse.containsKey('status') &&
+          decodedResponse['status'] == true) {
+        if (decodedResponse.containsKey('profile')) {
+          final profileData = decodedResponse['profile'];
+          final updatedProfile = Profile.fromJson(profileData);
+          emit(ProfileSuccess(updatedProfile));
+        } else {
+          emit(ProfileFailure('Profile data is missing in the response.'));
+        }
+      } else {
+        final errorMessage = decodedResponse['message'] ?? 'Unknown error';
+        emit(ProfileFailure(errorMessage));
+      }
+    } on ServerException catch (e) {
+      emit(ProfileFailure(e.errorModel.message));
+    } catch (e) {
+      emit(ProfileFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
+    }
+  }
+
+  Future<void> createChat(String doctorId) async {
+    try {
+      emit(CreateChatLoading());
+
+      final response = await api.post(
+        "${EndPoint.createChat}$doctorId",
+      );
+      print('Response chat data: $response');
+
+      if (response.data != null && response.data is Map<String, dynamic>) {
+        final chatResponse = ChatResponse.fromJson(response.data);
+
+        if (chatResponse.status) {
+          emit(CreateChatSuccess(chatResponse.chat));
+        } else {
+          emit(CreateChatFailure('Failed to create chat.'));
+        }
+      } else {
+        emit(CreateChatFailure('Invalid response format from the server.'));
+      }
+    } on ServerException catch (e) {
+      emit(ProfileFailure(e.errorModel.message));
+    } catch (e) {
+      emit(ProfileFailure('Unexpected error: $e'));
+      print('Unexpected error: $e');
+    }
   }
 }
-
- }

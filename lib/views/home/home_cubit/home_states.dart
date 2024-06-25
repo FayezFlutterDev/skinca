@@ -1,3 +1,4 @@
+import 'package:skinca/core/models/create_chat_model.dart';
 import 'package:skinca/core/models/disease_model.dart';
 import 'package:skinca/core/models/doctor_model.dart';
 import 'package:skinca/core/models/profile_model.dart';
@@ -64,4 +65,16 @@ class ProfileFailure extends HomeState {
   final String error;
 
   ProfileFailure(this.error);
+}
+
+class CreateChatLoading extends HomeState {}
+
+class CreateChatSuccess extends HomeState {
+  final Chat chat;
+  CreateChatSuccess(this.chat);
+}
+
+class CreateChatFailure extends HomeState {
+  final String error;
+  CreateChatFailure(this.error);
 }
