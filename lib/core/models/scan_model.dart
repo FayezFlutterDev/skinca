@@ -1,15 +1,15 @@
 class ScanResponse {
-  final String prediction;
+  final String message;
   final bool status;
 
   ScanResponse({
-    required this.prediction,
+    required this.message,
     required this.status,
   });
 
   factory ScanResponse.fromJson(Map<String, dynamic> json) {
     return ScanResponse(
-      prediction: json['prediction'] ?? '',
+      message: json['content'] ?? '',
       status: json['status'] ?? false,
     );
   }

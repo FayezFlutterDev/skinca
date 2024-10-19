@@ -1,6 +1,5 @@
 import 'dart:convert';
-
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_slider.dart' as carousel;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skinca/core/constants/constants.dart';
@@ -20,7 +19,7 @@ class HomePage extends StatelessWidget {
   const HomePage({
     super.key,
   });
-  static const String routeName = '/home';
+  static const String routeName = '/';
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +29,7 @@ class HomePage extends StatelessWidget {
     SizeConfig().init(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(getProportionateScreenHeight(65)),
         child: Padding(
@@ -39,7 +38,7 @@ class HomePage extends StatelessWidget {
             vertical: getProportionateScreenHeight(8),
           ),
           child: AppBar(
-            backgroundColor: Theme.of(context).colorScheme.background,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             leadingWidth: getProportionateScreenWidth(300),
             leading: Row(
               children: [
@@ -354,8 +353,8 @@ class CarouselSliderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CarouselSlider(
-      options: CarouselOptions(
+    return carousel.CarouselSlider(
+      options: carousel.CarouselOptions(
         autoPlay: true,
         aspectRatio: 16 / 9,
         enlargeCenterPage: true,

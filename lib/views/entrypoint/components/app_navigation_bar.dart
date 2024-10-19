@@ -34,7 +34,7 @@ class AppBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final backgroundColor = theme.colorScheme.background;
+    final backgroundColor = theme.colorScheme.surface;
     final selectedItemColor = theme.colorScheme.primary;
     final unselectedItemColor = theme.iconTheme.color!.withOpacity(0.6);
 

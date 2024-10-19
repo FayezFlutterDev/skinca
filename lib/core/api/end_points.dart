@@ -1,4 +1,3 @@
-
 class EndPoint {
   static String baseUrl = 'https://skinca.runasp.net/api/';
   static String login = 'account/get-token';
@@ -10,8 +9,9 @@ class EndPoint {
   static String search = 'Search';
   static String profile = 'account/profile';
   static String logout = 'account/delete-account';
-  static String createChat = 'chats/'; 
-  static String scan = "scan";
+  static String createChat = 'chats/';
+  static String scan = "ml";
+  static String image = "image";
 }
 
 class ApiKey {
@@ -22,7 +22,7 @@ class ApiKey {
   static String confirmPassword = 'confirmPassword';
   static String token = 'token';
   static String message = 'message';
-  static String id ='id';
+  static String id = 'id';
   static String fName = 'firstName';
   static String lName = 'lastName';
   static String phoneNumber = 'phoneNumber';
@@ -33,5 +33,4 @@ class ApiKey {
   static String latitude = 'latitude';
   static String longitude = 'Longitude';
   static String profilePicture = 'profilePicture';
-  
 }

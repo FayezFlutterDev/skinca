@@ -28,11 +28,10 @@ class HomeCubit extends Cubit<HomeState> {
   GlobalKey<FormState> searchKey = GlobalKey<FormState>();
   final TextEditingController searchController = TextEditingController();
   XFile? scanPic;
-   uploadScanPic(XFile image) async {
+  uploadScanPic(XFile image) async {
     scanPic = image;
     emit(PickImageLoading());
   }
-
 
   Profile profile = Profile(
     email: '',
@@ -469,7 +468,7 @@ class HomeCubit extends Cubit<HomeState> {
       print('Unexpected error: $e');
     }
   }
-  
+
   Future<void> scan() async {
   try {
     emit(ScanLoading());
@@ -483,34 +482,16 @@ class HomeCubit extends Cubit<HomeState> {
       isFormData: true,
     );
 
-    // Log the response data for debugging
-    print(response);
+    print("Response of Scan$response");
 
-    // Parse the response data
-    dynamic decodedResponse;
+    // Assuming response.data contains the JSON response
+    final responseData = json.decode(response.data);
 
-    if (response is String) {
-      decodedResponse = jsonDecode(response);
-    } else {
-      decodedResponse = response;
-    }
+    // Parse the JSON response into ResponseModel
+    final responseModel = ScanResponse.fromJson(responseData);
 
-    // Check if the response data is a Map
-    if (decodedResponse != null && decodedResponse is Map<String, dynamic>) {
-      // Create the ScanResponse from the parsed JSON
-      final scanResponse = ScanResponse.fromJson(decodedResponse);
-
-      // Log the scan details for debugging
-      print('ScanResponse: $scanResponse');
-
-      if (scanResponse.status) {
-        emit(ScanSuccess(scanResponse.prediction, scanResponse.status));
-      } else {
-        emit(ScanFailure('Scan failed.'));
-      }
-    } else {
-      emit(ScanFailure('Invalid response format from the server.'));
-    }
+    // Emit success with parsed ResponseModel
+    emit(ScanSuccess(responseModel.message, true));
   } on ServerException catch (e) {
     emit(ScanFailure(e.errorModel.message));
   } catch (e) {
@@ -518,5 +499,4 @@ class HomeCubit extends Cubit<HomeState> {
     print('Unexpected error: $e');
   }
 }
-
 }

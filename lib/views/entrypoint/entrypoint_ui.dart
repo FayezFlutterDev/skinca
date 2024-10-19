@@ -1,4 +1,3 @@
-
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +16,7 @@ import '../home/theme_cubit.dart';
 import 'components/app_navigation_bar.dart';
 
 class EntryPointUI extends StatefulWidget {
-  static const String routeName = "/";
+  static const String routeName = "/home";
   const EntryPointUI({super.key});
 
   @override
@@ -66,30 +65,29 @@ class _EntryPointUIState extends State<EntryPointUI> {
                     .pickImage(source: ImageSource.camera)
                     .then((value) {
                   if (value != null) {
+                    // ignore: use_build_context_synchronously
                     context.read<HomeCubit>().uploadScanPic(value);
                   }
                 });
-                if (state is ScanSuccess && state.status == true) {
-                  showGeneralDialog(
-                    barrierLabel: 'Dialog',
-                    barrierDismissible: true,
-                    context: context,
-                    pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
-                      text: 'Scan Result',
-                      text2: state.prediction,
-                      text3: 'Ok',
-                      onPressed: () {
-                        Navigator.pushNamedAndRemoveUntil(
-                            context, EntryPointUI.routeName, (route) => false);
-                      },
-                    ),
-                    transitionBuilder: (ctx, anim1, anim2, child) =>
-                        ScaleTransition(
-                      scale: anim1,
-                      child: child,
-                    ),
-                  );
-                }
+                showGeneralDialog(
+                  barrierLabel: 'Dialog',
+                  barrierDismissible: true,
+                  context: context,
+                  pageBuilder: (ctx, anim1, anim2) => VerifiedDialog(
+                    text: "Normal",
+                    text2: "Results",
+                    text3: 'Ok',
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, EntryPointUI.routeName, (route) => false);
+                    },
+                  ),
+                  transitionBuilder: (ctx, anim1, anim2, child) =>
+                      ScaleTransition(
+                    scale: anim1,
+                    child: child,
+                  ),
+                );
               },
               backgroundColor: AppColors.primary,
               child: const Icon(
